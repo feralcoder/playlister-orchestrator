@@ -10,6 +10,14 @@ parameters:
     label: Cassandra Instance Name
     description: Name to be used for all cassandra instance
     default: playlister_be
+  be_sg_ports:
+    type: comma_delimited_list
+    label: Cassandra Ports
+    description: Ports for cassandra service to receive
+    default: "22,7000,7001,7199,9042,9142,9160"
+  be_secgroup_id:
+    type: string
+    description: Cassandra node Security Group
   be_key_name:
     type: string
     label: Cassandra Key Name
@@ -25,11 +33,6 @@ parameters:
     label: Cassandra Backend Instance Type
     description: Type of instance (flavor) to be used for cassandra nodes
     default: "m1.medium"
-  be_sg_ports:
-    type: comma_delimited_list
-    label: Cassandra Ports
-    description: Ports for cassandra service to receive
-    default: "22,7000,7001,7199,9042,9142,9160"
   be_subnets:
     type: comma_delimited_list
     label: Cassandra subnets
@@ -42,19 +45,6 @@ parameters:
 
 
 resources:
-  be_secgroup:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      name:
-        list_join: ['_', [ {get_param: be_name}, '_secgroup']]
-      rules:
-        repeat:
-          for_each:
-            <%port%>: { get_param: be_sg_ports }
-          template:
-            protocol: tcp
-            port_range_min: <%port%>
-            port_range_max: <%port%>
   backend:
     type: OS::Nova::Server
     properties:
@@ -62,7 +52,8 @@ resources:
       key_name: { get_param: be_key_name }
       image: { get_param: be_image }
       flavor: { get_param: be_instance_type }
-      security_groups: [default, { get_resource: be_secgroup }]
+      security_groups: [default, { get_param: be_secgroup_id }]
+#      security_groups: [default, { get_resource: be_secgroup }]
       networks:
         repeat:
           for_each:

@@ -5,6 +5,26 @@ description: >
   a cassandra backend
 
 parameters:
+  fe_name:
+    type: string
+    label: Front-Middle-End Instance Name
+    description: Name to be used for all python service instance
+    default: playlister_fe
+  fe_sg_ports:
+    type: comma_delimited_list
+    label: Front-Middle-End Ports
+    description: Ports for python services to receive
+    default: "80,443,8080,22"
+  be_name:
+    type: string
+    label: Cassandra Instance Name
+    description: Name to be used for all cassandra instance
+    default: playlister_be
+  be_sg_ports:
+    type: comma_delimited_list
+    label: Cassandra Ports
+    description: Ports for cassandra service to receive
+    default: "22,7000,7001,7199,9042,9142,9160"
   private_network:
     type: string
     description: Network used by the servers
@@ -37,6 +57,7 @@ resources:
       resource:
         type: frontend.yaml
         properties:
+          fe_secgroup_id: { get_resource: fe_secgroup }
           fe_80_pool_id: { get_resource: fe_80_pool }
           fe_8080_pool_id: { get_resource: fe_8080_pool }
           fe_443_pool_id: { get_resource: fe_443_pool }
@@ -62,6 +83,8 @@ resources:
     properties:
       resource:
         type: backend.yaml
+        properties:
+          be_secgroup_id: { get_resource: be_secgroup }
       cooldown: 60
       max_size: 10
       min_size: 4
@@ -75,6 +98,33 @@ resources:
 #      timeout: 3
 #      max_retries: 3
 #      pool: { get_resource: pool }
+
+  be_secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: be_name}, 'secgroup']]
+      rules:
+        repeat:
+          for_each:
+            <%port%>: { get_param: be_sg_ports }
+          template:
+            protocol: tcp
+            port_range_min: <%port%>
+            port_range_max: <%port%>
+  fe_secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: fe_name}, 'secgroup']]
+      rules:
+        repeat:
+          for_each:
+            <%port%>: { get_param: fe_sg_ports }
+          template:
+            protocol: tcp
+            port_range_min: <%port%>
+            port_range_max: <%port%>
 
   fe_80_pool:
     type: OS::Octavia::Pool

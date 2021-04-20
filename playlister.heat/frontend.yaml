@@ -5,6 +5,19 @@ description: >
   a cassandra backend
 
 parameters:
+  fe_name:
+    type: string
+    label: Front-Middle-End Instance Name
+    description: Name to be used for all python service instance
+    default: playlister_fe
+  fe_sg_ports:
+    type: comma_delimited_list
+    label: Front-Middle-End Ports
+    description: Ports for python services to receive
+    default: "80,443,8080,22"
+  fe_secgroup_id:
+    type: string
+    description: Front-Middle-End Security Group
   fe_80_pool_id:
     type: string
     description: Port 80 Pool to contact
@@ -14,11 +27,6 @@ parameters:
   fe_443_pool_id:
     type: string
     description: Port 443 Pool to contact
-  fe_name:
-    type: string
-    label: Front-Middle-End Instance Name
-    description: Name to be used for all python service instance
-    default: playlister_fe
   fe_key_name:
     type: string
     label: Front-Middle-End Key Name
@@ -67,19 +75,6 @@ parameters:
 
 
 resources:
-#  fe_secgroup:
-#    type: OS::Neutron::SecurityGroup
-#    properties:
-#      name:
-#        list_join: ['_', [ {get_param: fe_name}, '_secgroup']]
-#      rules:
-#        repeat:
-#          for_each:
-#            <%port%>: { get_param: fe_sg_ports }
-#          template:
-#            protocol: tcp
-#            port_range_min: <%port%>
-#            port_range_max: <%port%>
   frontend:
     type: OS::Nova::Server
     properties:
@@ -87,7 +82,8 @@ resources:
       key_name: { get_param: fe_key_name }
       image: { get_param: fe_image }
       flavor: { get_param: fe_instance_type }
-      security_groups: [wideopen]
+#      security_groups: [wideopen]
+      security_groups: [default, { get_param: fe_secgroup_id }]
 #      security_groups: [default, { get_resource: fe_secgroup }]
 #      metadata: {get_param: metadata}
 #      user_data: {get_param: user_data}
