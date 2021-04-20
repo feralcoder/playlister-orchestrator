@@ -71,3 +71,8 @@ resources:
           template:
             network: <%net%>
             subnet: <%sub%>
+
+outputs:
+  server_ip:
+    description: IP Address of the backend node
+    value: { get_attr: [backend, first_address] }
