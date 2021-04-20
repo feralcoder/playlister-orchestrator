@@ -3,8 +3,8 @@ parameter_defaults:
   be_name: playlister4_be
   fe_key_name: cliff_admin
   be_key_name: cliff_admin
-  fe_image_id: "ubuntu-20.4"
-  be_image_id: "ubuntu-20.4"
+  fe_image_id: "centos-8.3"
+  be_image_id: "centos-8.3"
   fe_instance_type: "m1.medium"
   be_instance_type: "m1.medium"
   fe_ports: "80,443,8080,22"
