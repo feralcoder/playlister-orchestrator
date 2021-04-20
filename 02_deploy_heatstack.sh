@@ -7,13 +7,15 @@ TEMPLATE_DIR=$PLAYLISTER_DIR/playlister.heat/
 [ "${BASH_SOURCE[0]}" -ef "$0" ]  || { echo "Don't source this script!  Run it."; return 1; }
 
 source_host_control_scripts       || fail_exit "source_host_control_scripts"
-new_venv playlister               || fail_exit "new_venv kolla-ansible"
 use_venv playlister               || fail_exit "use_venv kolla-ansible"
 . /etc/kolla/admin-openrc.sh
 
 ANSIBLE_CONTROLLER=dmb
 
-STACK_NAME=$1
 
+#STACK_NAME=playlister && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister.yaml $STACK_NAME 
+#STACK_NAME=playlister2 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister2.yaml $STACK_NAME 
+STACK_NAME=playlister3 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister3.yaml $STACK_NAME 
+#STACK_NAME=playlister4 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister4.yaml $STACK_NAME 
+#STACK_NAME=playlister5 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister5.yaml $STACK_NAME 
 
-openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment.yaml $STACK_NAME 

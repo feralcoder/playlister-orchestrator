@@ -119,3 +119,8 @@ resources:
     properties:
       vip_subnet: { get_param: vip_subnet }
       vip_address: { get_param: fe_vip }
+
+outputs:
+  vip_ip:
+    description: IP Address of the LB VIP
+    value: { get_attr: [fe_loadbalancer, vip_address] }
