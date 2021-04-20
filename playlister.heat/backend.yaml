@@ -53,7 +53,6 @@ resources:
       image: { get_param: be_image }
       flavor: { get_param: be_instance_type }
       security_groups: [default, { get_param: be_secgroup_id }]
-#      security_groups: [default, { get_resource: be_secgroup }]
       networks:
         repeat:
           for_each:

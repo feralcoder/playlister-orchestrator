@@ -82,9 +82,7 @@ resources:
       key_name: { get_param: fe_key_name }
       image: { get_param: fe_image }
       flavor: { get_param: fe_instance_type }
-#      security_groups: [wideopen]
       security_groups: [default, { get_param: fe_secgroup_id }]
-#      security_groups: [default, { get_resource: fe_secgroup }]
 #      metadata: {get_param: metadata}
 #      user_data: {get_param: user_data}
 #      user_data_format: RAW
