@@ -68,8 +68,8 @@ parameters:
 #  user_data:
 #    type: string
 #    description: Server user_data
-#  metadata:
-#    type: json
+  metadata:
+    type: json
 
 
 
@@ -83,7 +83,7 @@ resources:
       image: { get_param: fe_image }
       flavor: { get_param: fe_instance_type }
       security_groups: [default, { get_param: fe_secgroup_id }]
-#      metadata: {get_param: metadata}
+      metadata: {get_param: metadata}
 #      user_data: {get_param: user_data}
 #      user_data_format: RAW
       networks:
@@ -95,13 +95,18 @@ resources:
             network: <%net%>
             subnet: <%sub%>
       user_data_format: RAW
-#      user_data:
-#        str_replace:
-#          template: |
-#            #! /bin/sh -v
-#            Body=$(hostname)
-#            Response="HTTP/1.1 200 OK\r\nContent-Length: ${#Body}\r\n\r\n$Body"
-#            while true ; do echo -e $Response | nc -l 80; done
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            IP=$( ip add | grep 'inet ' | grep 10.254 | awk '{print $2}' | awk -F'/' '{print $1}' )
+            DASH_IP=$( echo $IP | sed 's/\./-/g' )
+            HOSTNAME=$( hostname -s )-$DASH_IP.novalocal
+            hostnamectl set-hostname $HOSTNAME
+            EOF
+          params:
+            test1: stuff
+            test2: stuff
   fe_80_member:
     type: OS::Octavia::PoolMember
     properties:

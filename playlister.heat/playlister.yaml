@@ -61,7 +61,7 @@ resources:
           fe_80_pool_id: { get_resource: fe_80_pool }
           fe_8080_pool_id: { get_resource: fe_8080_pool }
           fe_443_pool_id: { get_resource: fe_443_pool }
-#          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
+          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
 #          user_data:
 #            str_replace:
 #              template: |
@@ -89,16 +89,6 @@ resources:
       max_size: 10
       min_size: 4
       desired_capacity: 4
-
-#  monitor:
-#    type: OS::Octavia::HealthMonitor
-#    properties:
-#      delay: 3
-#      type: HTTP
-#      timeout: 3
-#      max_retries: 3
-#      pool: { get_resource: pool }
-
   be_secgroup:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -125,6 +115,32 @@ resources:
             protocol: tcp
             port_range_min: <%port%>
             port_range_max: <%port%>
+
+
+  fe_80_monitor:
+    type: OS::Octavia::HealthMonitor
+    properties:
+      delay: 3
+      type: HTTP
+      timeout: 3
+      max_retries: 3
+      pool: { get_resource: fe_80_pool }
+  fe_8080_monitor:
+    type: OS::Octavia::HealthMonitor
+    properties:
+      delay: 3
+      type: HTTP
+      timeout: 3
+      max_retries: 3
+      pool: { get_resource: fe_8080_pool }
+  fe_443_monitor:
+    type: OS::Octavia::HealthMonitor
+    properties:
+      delay: 3
+      type: HTTPS
+      timeout: 3
+      max_retries: 3
+      pool: { get_resource: fe_443_pool }
 
   fe_80_pool:
     type: OS::Octavia::Pool
@@ -169,6 +185,89 @@ resources:
     properties:
       vip_subnet: { get_param: vip_subnet }
       vip_address: { get_param: fe_vip }
+
+  fe_scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: frontends}
+      cooldown: 60
+      scaling_adjustment: 1
+  fe_scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: frontends}
+      cooldown: 60
+      scaling_adjustment: -1
+  be_scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: backends}
+      cooldown: 60
+      scaling_adjustment: 1
+  be_scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: backends}
+      cooldown: 60
+      scaling_adjustment: -1
+
+  fe_cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 1 minute
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [fe_scaleup_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+  fe_cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 10 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 15
+      alarm_actions:
+        - {get_attr: [fe_scaledown_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt
+  be_cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 1 minute
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [be_scaleup_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+  be_cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 10 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 15
+      alarm_actions:
+        - {get_attr: [be_scaledown_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt
+
 
 outputs:
   vip_ip:

@@ -61,7 +61,19 @@ resources:
           template:
             network: <%net%>
             subnet: <%sub%>
-
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            IP=$( ip add | grep 'inet ' | grep 10.254 | awk '{print $2}' | awk -F'/' '{print $1}' )
+            DASH_IP=$( echo $IP | sed 's/\./-/g' )
+            HOSTNAME=$( hostname -s )-$DASH_IP.novalocal
+            hostnamectl set-hostname $HOSTNAME
+            EOF
+          params:
+            test1: stuff
+            test2: stuff
 outputs:
   server_ip:
     description: IP Address of the backend node
