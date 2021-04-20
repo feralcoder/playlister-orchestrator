@@ -1,6 +1,6 @@
 parameter_defaults:
-  fe_name: playlister_fe
-  be_name: playlister_be
+  fe_name: playlister2_fe
+  be_name: playlister2_be
   fe_key_name: cliff_admin
   be_key_name: cliff_admin
   fe_image_id: "ubuntu-20.4"
@@ -13,6 +13,13 @@ parameter_defaults:
   fe_networks: "admin1-net"
   be_subnets: "admin1-subnet"
   be_networks: "admin1-net"
+
+  # VARS FOR playlister.yaml
+  fe_vip: "172.30.1.12"
+  private_network: admin1-net
+  public_network: public1
+  vip_subnet: public1-subnet
+
 
 #resource_registry:  
 #    "OS::Nova::Server::PLFrontend": "frontend.yaml"
