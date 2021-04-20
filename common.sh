@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 source_host_control_scripts () {
   . ~/CODE/feralcoder/host_control/control_scripts.sh
 }
@@ -19,35 +20,43 @@ test_sudo () {
   cat $SUDO_PASS_FILE | sudo -S ls > /dev/null 2>&1
 }
 
+
 use_venv () {
   local VENV=$1
   [[ $VENV != "" ]] || { echo "No VENV supllied!"; return 1; }
   source ~/CODE/venvs/$VENV/bin/activate
 }
 
+install_venv () {
+  sudo apt -y install python3-pip || sudo dnf -y install python3-pip
+  sudo apt -y install python3-venv || sudo dnf -y install python3-venv
+}
+
 setup_venv () {
-  pip install --upgrade pip
-  pip install --upgrade pep8
-  pip install --upgrade pylint
-  pip install --upgrade flake8
-  pip install --upgrade pycodestyle
-  pip install --upgrade path.py
-  pip install --upgrade python-openstackclient
-  pip install --upgrade python-heatclient
-  pip install --upgrade python-magnumclient
-  pip install --upgrade python-neutronclient
-  pip install --upgrade python-glanceclient
-  pip install --upgrade python-novaclient
-  pip install --upgrade python-cinderclient
-  pip install --upgrade python-keystoneclient
-  pip install --upgrade keystoneauth1
+  pip3 install --upgrade pip
+  pip3 install --upgrade pep8
+  pip3 install --upgrade pylint
+  pip3 install --upgrade flake8
+  pip3 install --upgrade pycodestyle
+  pip3 install --upgrade path.py
+  pip3 install --upgrade python-openstackclient
+  pip3 install --upgrade python-heatclient
+  pip3 install --upgrade python-magnumclient
+  pip3 install --upgrade python-neutronclient
+  pip3 install --upgrade python-glanceclient
+  pip3 install --upgrade python-novaclient
+  pip3 install --upgrade python-cinderclient
+  pip3 install --upgrade python-keystoneclient
+  pip3 install --upgrade keystoneauth1
 }
 
 new_venv () {
   local VENV=$1
   [[ $VENV != "" ]] || { echo "No VENV supllied!"; return 1; }
+  install_venv
   mkdir -p ~/CODE/venvs/$VENV &&
   python3 -m venv ~/CODE/venvs/$VENV
   use_venv $VENV
   setup_venv
 }
+
