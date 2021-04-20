@@ -1,0 +1,148 @@
+heat_template_version: 2018-08-31
+
+description: >
+  Template to deploy a layer of front-middle-ends with
+  a cassandra backend
+
+parameters:
+  fe_80_pool_id:
+    type: string
+    description: Port 80 Pool to contact
+  fe_8080_pool_id:
+    type: string
+    description: Port 8080 Pool to contact
+  fe_443_pool_id:
+    type: string
+    description: Port 443 Pool to contact
+  fe_name:
+    type: string
+    label: Front-Middle-End Instance Name
+    description: Name to be used for all python service instance
+    default: playlister_fe
+  fe_key_name:
+    type: string
+    label: Front-Middle-End Key Name
+    description: Name of key-pair to be used for all python service instance
+    default: cliff_admin
+  fe_image:
+    type: string
+    label: Front-Middle-End Image ID
+    description: Image to be used for python server instance
+    default: "ubuntu-20.4"
+  fe_instance_type:
+    type: string
+    label: Front-Middle-End Instance Type
+    description: Type of instance (flavor) to be used for python service nodes
+    default: "m1.medium"
+  fe_http_ports:
+    type: comma_delimited_list
+    label: Front-Middle-End HTTP Ports
+    description: HTTP Ports for python services to receive
+    default: "80,8080"
+  fe_https_ports:
+    type: comma_delimited_list
+    label: Front-Middle-End HTTPS Ports
+    description: HTTPS Ports for python services to receive
+    default: "443"
+  fe_sg_ports:
+    type: comma_delimited_list
+    label: Front-Middle-End Ports
+    description: Ports for python services to receive
+    default: "80,443,8080,22"
+  fe_subnets:
+    type: comma_delimited_list
+    label: Front-Middle-End subnets
+    default: "admin1-subnet"
+  fe_networks:
+    type: comma_delimited_list
+    label: Front-Middle-End networks
+    default: "admin1-net"
+#  user_data:
+#    type: string
+#    description: Server user_data
+#  metadata:
+#    type: json
+
+
+
+
+resources:
+#  fe_secgroup:
+#    type: OS::Neutron::SecurityGroup
+#    properties:
+#      name:
+#        list_join: ['_', [ {get_param: fe_name}, '_secgroup']]
+#      rules:
+#        repeat:
+#          for_each:
+#            <%port%>: { get_param: fe_sg_ports }
+#          template:
+#            protocol: tcp
+#            port_range_min: <%port%>
+#            port_range_max: <%port%>
+  frontend:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: fe_name }
+      key_name: { get_param: fe_key_name }
+      image: { get_param: fe_image }
+      flavor: { get_param: fe_instance_type }
+      security_groups: [wideopen]
+#      security_groups: [default, { get_resource: fe_secgroup }]
+#      metadata: {get_param: metadata}
+#      user_data: {get_param: user_data}
+#      user_data_format: RAW
+      networks:
+        repeat:
+          for_each:
+            <%sub%>: { get_param: fe_subnets }
+            <%net%>: { get_param: fe_networks }
+          template:
+            network: <%net%>
+            subnet: <%sub%>
+      user_data_format: RAW
+#      user_data:
+#        str_replace:
+#          template: |
+#            #! /bin/sh -v
+#            Body=$(hostname)
+#            Response="HTTP/1.1 200 OK\r\nContent-Length: ${#Body}\r\n\r\n$Body"
+#            while true ; do echo -e $Response | nc -l 80; done
+  fe_80_member:
+    type: OS::Octavia::PoolMember
+    properties:
+      pool: { get_param: fe_80_pool_id }
+      address: { get_attr: [ frontend, first_address ] }
+      protocol_port: 80
+      subnet: { get_param: [ fe_subnets, 0 ] }
+  fe_8080_member:
+    type: OS::Octavia::PoolMember
+    properties:
+      pool: { get_param: fe_8080_pool_id }
+      address: { get_attr: [ frontend, first_address ] }
+      protocol_port: 8080
+      subnet: { get_param: [ fe_subnets, 0 ] }
+  fe_443_member:
+    type: OS::Octavia::PoolMember
+    properties:
+      pool: { get_param: fe_443_pool_id }
+      address: { get_attr: [ frontend, first_address ] }
+      protocol_port: 443
+      subnet: { get_param: [ fe_subnets, 0 ] }
+
+
+### OUTPUTS STOLEN FROM
+# https://ibm-blue-box-help.github.io/help-documentation/heat/autoscaling-with-heat/
+outputs:
+  server_ip:
+    description: IP Address of the load-balanced server.
+    value: { get_attr: [frontend, first_address] }
+  fe_80_lb_member:
+    description: LB port 80 member details.
+    value: { get_attr: [fe_80_member, show] }
+  fe_8080_lb_member:
+    description: LB port 8080 member details.
+    value: { get_attr: [fe_8080_member, show] }
+  fe_443_lb_member:
+    description: LB port 443 member details.
+    value: { get_attr: [fe_443_member, show] }

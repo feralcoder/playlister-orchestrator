@@ -1,0 +1,73 @@
+heat_template_version: 2018-08-31
+
+description: >
+  Template to deploy a layer of front-middle-ends with
+  a cassandra backend
+
+parameters:
+  be_name:
+    type: string
+    label: Cassandra Instance Name
+    description: Name to be used for all cassandra instance
+    default: playlister_be
+  be_key_name:
+    type: string
+    label: Cassandra Key Name
+    description: Name of key-pair to be used for all cassandra instance
+    default: cliff_admin
+  be_image:
+    type: string
+    label: Cassandra Image ID
+    description: Image to be used for cassandra instance
+    default: "ubuntu-20.4"
+  be_instance_type:
+    type: string
+    label: Cassandra Backend Instance Type
+    description: Type of instance (flavor) to be used for cassandra nodes
+    default: "m1.medium"
+  be_sg_ports:
+    type: comma_delimited_list
+    label: Cassandra Ports
+    description: Ports for cassandra service to receive
+    default: "22,7000,7001,7199,9042,9142,9160"
+  be_subnets:
+    type: comma_delimited_list
+    label: Cassandra subnets
+    default: "admin1-subnet"
+  be_networks:
+    type: comma_delimited_list
+    label: Cassandra networks
+    default: "admin1-net"
+
+
+
+resources:
+  be_secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: be_name}, '_secgroup']]
+      rules:
+        repeat:
+          for_each:
+            <%port%>: { get_param: be_sg_ports }
+          template:
+            protocol: tcp
+            port_range_min: <%port%>
+            port_range_max: <%port%>
+  backend:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: be_name }
+      key_name: { get_param: be_key_name }
+      image: { get_param: be_image }
+      flavor: { get_param: be_instance_type }
+      security_groups: [default, { get_resource: be_secgroup }]
+      networks:
+        repeat:
+          for_each:
+            <%sub%>: { get_param: be_subnets }
+            <%net%>: { get_param: be_networks }
+          template:
+            network: <%net%>
+            subnet: <%sub%>

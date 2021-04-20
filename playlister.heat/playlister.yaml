@@ -1,0 +1,121 @@
+heat_template_version: 2018-08-31
+
+description: >
+  Template to deploy a layer of front-middle-ends with
+  a cassandra backend
+
+parameters:
+  private_network:
+    type: string
+    description: Network used by the servers
+    default: admin1-net
+    constraints:
+    - custom_constraint: neutron.network
+  public_network:
+    type: string
+    description: Network used by the load balancer
+    default: public1
+    constraints:
+    - custom_constraint: neutron.network
+  vip_subnet:
+    type: string
+    description: Subnet on which the load balancer will be located
+    default: public1-subnet
+    constraints:
+    - custom_constraint: neutron.subnet
+  fe_vip:
+    type: string
+    description: IP of frontend VIP
+    constraints:
+    default: "172.30.1.11"
+
+
+resources:
+  frontends:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: frontend.yaml
+        properties:
+          fe_80_pool_id: { get_resource: fe_80_pool }
+          fe_8080_pool_id: { get_resource: fe_8080_pool }
+          fe_443_pool_id: { get_resource: fe_443_pool }
+#          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
+#          user_data:
+#            str_replace:
+#              template: |
+#                #!/bin/bash -v
+#                sudo mysql -uroot -p"password" <<EOF
+#                use wordpress;
+#                update wp_options set option_value='http://$ip/wordpress' where option_id = 2;
+#                update wp_options set option_value='http://$ip/wordpress' where option_id = 1;
+#                EOF
+#
+#              params:
+#                $ip:  { get_attr: [lb_floating, floating_ip_address] }
+      cooldown: 60
+      max_size: 10
+      min_size: 3
+      desired_capacity: 3
+  backends:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: backend.yaml
+      cooldown: 60
+      max_size: 10
+      min_size: 4
+      desired_capacity: 4
+
+#  monitor:
+#    type: OS::Octavia::HealthMonitor
+#    properties:
+#      delay: 3
+#      type: HTTP
+#      timeout: 3
+#      max_retries: 3
+#      pool: { get_resource: pool }
+
+  fe_80_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTP
+      listener: { get_resource: fe_80_listener }
+  fe_8080_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTP
+      listener: { get_resource: fe_8080_listener }
+  fe_443_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTPS
+      listener: { get_resource: fe_443_listener }
+
+  fe_80_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTP
+      protocol_port: 80
+  fe_8080_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTP
+      protocol_port: 8080
+  fe_443_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTPS
+      protocol_port: 443
+
+  fe_loadbalancer:
+    type: OS::Octavia::LoadBalancer
+    properties:
+      vip_subnet: { get_param: vip_subnet }
+      vip_address: { get_param: fe_vip }
