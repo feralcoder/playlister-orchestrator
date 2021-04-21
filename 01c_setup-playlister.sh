@@ -2,6 +2,8 @@
 PLAYLISTER_SETUP_SOURCE="${BASH_SOURCE[0]}"
 PLAYLISTER_SETUP_DIR=$( realpath `dirname $PLAYLISTER_SETUP_SOURCE` )
 
+KOLLA_SETUP_DIR=~/CODE/feralcoder/kolla-ansible/admin-scripts/
+
 . $PLAYLISTER_SETUP_DIR/common.sh
 new_venv playlister
 use_venv playlister
@@ -9,6 +11,8 @@ use_venv playlister
 . $PLAYLISTER_SETUP_DIR/playlister-openrc.sh
 KEYPATH=~/.ssh/keypair.cliff_admin.private
 KEYNAME=cliff_admin
+
+openstack keypair create cliff_admin --public-key $KOLLA_SETUP_DIR/../files/keypair.cliff_admin.public
 
 
 openstack server list
