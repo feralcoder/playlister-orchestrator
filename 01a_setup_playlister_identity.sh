@@ -1,6 +1,6 @@
-#!/bin/bash -x
-FERALSTACK_SETUP_SOURCE="${BASH_SOURCE[0]}"
-FERALSTACK_SETUP_DIR=$( realpath `dirname $FERALSTACK_SETUP_SOURCE` )
+#!/bin/bash
+PLAYLISTER_SETUP_SOURCE="${BASH_SOURCE[0]}"
+PLAYLISTER_SETUP_DIR=$( realpath `dirname $PLAYLISTER_SETUP_SOURCE` )
 
 
 . ~/CODE/venvs/kolla-ansible/bin/activate
@@ -13,8 +13,8 @@ KEYNAME=cliff_admin
 echo "ENTER PLAYLISTER USER PASSWORD:"
 read -sr OS_PASSWORD_INPUT
 
-sed "s/__PASSWORD__/$OS_PASSWORD_INPUT/g" $FERALSTACK_SETUP_DIR/playlister-openrc.sh.template > $FERALSTACK_SETUP_DIR/playlister-openrc.sh
-chmod 700 $FERALSTACK_SETUP_DIR/playlister-openrc.sh
+sed "s/__PASSWORD__/$OS_PASSWORD_INPUT/g" $PLAYLISTER_SETUP_DIR/playlister-openrc.sh.template > $PLAYLISTER_SETUP_DIR/playlister-openrc.sh
+chmod 700 $PLAYLISTER_SETUP_DIR/playlister-openrc.sh
 
 openstack project create --domain default --description "playlister" playlister
 

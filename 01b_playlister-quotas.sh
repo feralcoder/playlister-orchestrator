@@ -1,4 +1,6 @@
 #!/bin/bash
+PLAYLISTER_SETUP_SOURCE="${BASH_SOURCE[0]}"
+PLAYLISTER_SETUP_DIR=$( realpath `dirname $PLAYLISTER_SETUP_SOURCE` )
 
 . ~/CODE/venvs/kolla-ansible/bin/activate
 . /etc/kolla/admin-openrc.sh
