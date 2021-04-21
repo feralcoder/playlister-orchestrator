@@ -49,6 +49,7 @@ setup_venv () {
   pip3 install --upgrade python-novaclient
   pip3 install --upgrade python-cinderclient
   pip3 install --upgrade python-keystoneclient
+  pip3 install --upgrade python-ceilometer
   pip3 install --upgrade keystoneauth1
 }
 
