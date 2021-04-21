@@ -6,7 +6,6 @@ TEMPLATE_DIR=$PLAYLISTER_DIR/playlister.heat/
 . $PLAYLISTER_DIR/common.sh
 [ "${BASH_SOURCE[0]}" -ef "$0" ]  || { echo "Don't source this script!  Run it."; return 1; }
 
-source_host_control_scripts       || fail_exit "source_host_control_scripts"
 use_venv playlister               || fail_exit "use_venv kolla-ansible"
 . $PLAYLISTER_SETUP_DIR/playlister-openrc.sh
 
