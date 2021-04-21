@@ -3,9 +3,9 @@ PLAYLISTER_SETUP_SOURCE="${BASH_SOURCE[0]}"
 PLAYLISTER_SETUP_DIR=$( realpath `dirname $PLAYLISTER_SETUP_SOURCE` )
 
 
-source_host_control_scripts () {
-  . ~/CODE/feralcoder/host_control/control_scripts.sh
-}
+#source_host_control_scripts () {
+#  . ~/CODE/feralcoder/host_control/control_scripts.sh
+#}
 
 fail_exit () {
   echo; echo "FAILURE, EXITING: $1"
