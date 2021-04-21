@@ -8,7 +8,7 @@ TEMPLATE_DIR=$PLAYLISTER_DIR/playlister.heat/
 
 source_host_control_scripts       || fail_exit "source_host_control_scripts"
 use_venv playlister               || fail_exit "use_venv kolla-ansible"
-. /etc/kolla/admin-openrc.sh
+. $PLAYLISTER_SETUP_DIR/playlister-openrc.sh
 
 ANSIBLE_CONTROLLER=dmb
 
