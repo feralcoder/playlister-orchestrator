@@ -14,6 +14,7 @@ echo "ENTER PLAYLISTER USER PASSWORD:"
 read -sr OS_PASSWORD_INPUT
 
 sed "s/__PASSWORD__/$OS_PASSWORD_INPUT/g" $FERALSTACK_SETUP_DIR/playlister-openrc.sh.template > $FERALSTACK_SETUP_DIR/playlister-openrc.sh
+chmod 700 $FERALSTACK_SETUP_DIR/playlister-openrc.sh
 
 openstack project create --domain default --description "playlister" playlister
 
