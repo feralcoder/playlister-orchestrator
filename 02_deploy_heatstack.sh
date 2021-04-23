@@ -9,6 +9,7 @@ TEMPLATE_DIR=$PLAYLISTER_DIR/playlister.heat/
 
 use_venv playlister               || fail_exit "use_venv kolla-ansible"
 . $PLAYLISTER_SETUP_DIR/playlister-openrc.sh
+#. /etc/kolla/admin-openrc.sh
 
 ANSIBLE_CONTROLLER=dmb
 
@@ -18,4 +19,3 @@ ANSIBLE_CONTROLLER=dmb
 #STACK_NAME=playlister3 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister3.yaml $STACK_NAME 
 #STACK_NAME=playlister4 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister4.yaml $STACK_NAME 
 STACK_NAME=playlister5 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister5.yaml $STACK_NAME 
-
