@@ -104,7 +104,8 @@ resources:
             #HOSTNAME=$( hostname -s )-$DASH_IP.novalocal
             #hostnamectl set-hostname $HOSTNAME
             curl http://192.168.127.220:81/files/firstboot.sh --output firstboot.sh
-            ./firstboot.sh
+            chmod 755 /firstboot.sh
+            /firstboot.sh
             EOF
           params:
             test1: stuff
