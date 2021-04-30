@@ -37,4 +37,27 @@ rename_servers () {
   done
 }
 
+set_cassandra_seeds () {
+  STACK_ID=$(openstack stack list | grep " $STACK_NAME " | awk '{print $2}')
+  STACK_LIST=$(openstack stack list --nested | grep $STACK_NAME) || return 1
+  RESOURCE_LIST=$(openstack stack resource list $STACK_ID --nested-depth 10) || return 1
+  BE_STACK_NAMES=$(echo "$RESOURCE_LIST" | grep " backend " | awk '{print $12}')
+  BE_STACK_IDS=$(for NAME in $BE_STACK_NAMES; do
+    echo "$STACK_LIST" | grep $NAME | awk '{print $2}'
+  done)
+  BE_IPS=$(for ID in $BE_STACK_IDS; do
+    openstack stack output show $ID server_ip -f json | jq '.["output_value"]' | sed 's/"//g' || return 1
+  done)
+
+  COUNT=0
+  SEEDS=$(for SEED in $BE_IPS; do
+    COUNT=$(( $COUNT + 1 ))
+    echo $SEED
+    if [[ $COUNT == 2 ]]; then break; fi
+  done)
+  SEEDS=$( echo $SEEDS | sed 's/ /:/g')
+  openstack stack update --tags "SEEDS=$SEEDS" --existing $STACK_ID
+}
+
 rename_servers
+set_cassandra_seeds
