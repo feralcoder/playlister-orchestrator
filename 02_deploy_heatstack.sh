@@ -3,6 +3,8 @@ PLAYLISTER_SOURCE="${BASH_SOURCE[0]}"
 PLAYLISTER_DIR=$( realpath `dirname $PLAYLISTER_SOURCE` )
 TEMPLATE_DIR=$PLAYLISTER_DIR/playlister.heat/
 
+ENV_FILESERVER=http://192.168.127.220:81/files/
+
 . $PLAYLISTER_DIR/venv.sh
 
 [ "${BASH_SOURCE[0]}" -ef "$0" ]  || { echo "Don't source this script!  Run it."; return 1; }
