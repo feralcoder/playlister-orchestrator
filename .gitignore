@@ -1,6 +1,7 @@
 *.swp
 playlister-openrc.sh.template
 firstboot.sh
-cache/
+cache/*
+playlister-python/cache/*
 !cache/README
 __pycache__/
