@@ -17,9 +17,9 @@ STACK_NAME=$1
 
 
 rename_servers () {
-  SERVER_LINES=`openstack server list | grep -v '\-\-\-\| Name ' | grep " ${STACK_NAME}_"`
-  FE_LINES=`echo "$SERVER_LINES" | grep " ${STACK_NAME}_fe "`
-  BE_LINES=`echo "$SERVER_LINES" | grep " ${STACK_NAME}_be "`
+  SERVER_LINES=`openstack server list | grep -v '\-\-\-\| Name ' | grep " ${STACK_NAME}[_-]"`
+  FE_LINES=`echo "$SERVER_LINES" | grep " ${STACK_NAME}_fe[ -]"`
+  BE_LINES=`echo "$SERVER_LINES" | grep " ${STACK_NAME}_be[ -]"`
 
   ID_IP_PAIRS=$(while read -r LINE; do
     ID=`echo $LINE | awk '{print $2}'`
@@ -30,6 +30,7 @@ rename_servers () {
   for PAIR in $ID_IP_PAIRS; do
     ID=`echo $PAIR | awk -F':' '{print $1}'`
     IP=`echo $PAIR | awk -F':' '{print $2}'`
+    ssh-keygen -R $IP
     HOSTNAME=`ssh -J admin1 -o "StrictHostKeyChecking no" -i ~/.ssh/keypair.cliff_admin.private -l centos $IP hostname -s`
     echo "Renaming $ID to $HOSTNAME"
     openstack server set --name $HOSTNAME $ID
