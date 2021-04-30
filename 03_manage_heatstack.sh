@@ -12,36 +12,9 @@ use_venv playlister               || fail_exit "use_venv kolla-ansible"
 ANSIBLE_CONTROLLER=dmb
 
 STACK_NAME=$1
+[[ $STACK_NAME != "" ]] || { echo "STACK_NAME undefined!"; exit; }
 
 
-
-gather_stack_facts () {
-  STACK_ID=`openstack stack list | grep " $STACK_NAME " | awk '{print $2}'`
-  RESOURCE_LIST=`openstack stack resource list $STACK_ID --nested-depth 10`
-  FE_STACK_NAMES=`echo "$RESOURCE_LIST" | grep " frontend " | awk '{print $12}'`
-  BE_STACK_NAMES=`echo "$RESOURCE_LIST" | grep " backend " | awk '{print $12}'`
-  STACK_LIST=`openstack stack list --nested | grep $STACK_NAME`
-
-  FE_STACK_IDS=`for NAME in $FE_STACK_NAMES; do
-    echo "$STACK_LIST" | grep $NAME | awk '{print $2}'
-  done`
-
-  BE_STACK_IDS=`for NAME in $BE_STACK_NAMES; do
-    echo "$STACK_LIST" | grep $NAME | awk '{print $2}'
-  done`
-
-  FE_LB_STACK_NAME=`echo "$RESOURCE_LIST" | grep " fe_loadbalancer " | awk '{print $12}'`
-  FE_LB_STACK_ID=`echo "$STACK_LIST" | grep " $FE_LB_STACK_NAME " | awk '{print $2}'`
-  FE_VIP=`openstack stack output show $FE_LB_STACK_ID vip_ip -f json | jq '.["output_value"]' | sed 's/"//g'`
-
-  FE_IPS=`for ID in $FE_STACK_IDS; do
-    openstack stack output show $ID server_ip -f json | jq '.["output_value"]' | sed 's/"//g'
-  done`
-
-  BE_IPS=`for ID in $BE_STACK_IDS; do
-    openstack stack output show $ID server_ip -f json | jq '.["output_value"]' | sed 's/"//g'
-  done`
-}
 
 rename_servers () {
   SERVER_LINES=`openstack server list | grep -v '\-\-\-\| Name ' | grep " ${STACK_NAME}_"`
@@ -57,16 +30,10 @@ rename_servers () {
   for PAIR in $ID_IP_PAIRS; do
     ID=`echo $PAIR | awk -F':' '{print $1}'`
     IP=`echo $PAIR | awk -F':' '{print $2}'`
-    HOSTNAME=`ssh -o "StrictHostKeyChecking no" -i ~/.ssh/keypair.cliff_admin.private -l centos $IP hostname -s`
+    HOSTNAME=`ssh -J admin1 -o "StrictHostKeyChecking no" -i ~/.ssh/keypair.cliff_admin.private -l centos $IP hostname -s`
     echo "Renaming $ID to $HOSTNAME"
     openstack server set --name $HOSTNAME $ID
   done
 }
-
-gather_stack_facts
-echo FE_VIP: $FE_VIP
-echo FE_IPS: $FE_IPS
-echo BE_IPS: $BE_IPS
-
 
 rename_servers
