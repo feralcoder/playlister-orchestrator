@@ -99,10 +99,10 @@ resources:
         str_replace:
           template: |
             #!/bin/bash -v
-            #IP=$( ip add | grep 'inet ' | grep 10.254 | awk '{print $2}' | awk -F'/' '{print $1}' )
-            #DASH_IP=$( echo $IP | sed 's/\./-/g' )
-            #HOSTNAME=$( hostname -s )-$DASH_IP.novalocal
-            #hostnamectl set-hostname $HOSTNAME
+            IP=$( ip add | grep 'inet ' | grep 10.254 | awk '{print $2}' | awk -F'/' '{print $1}' )
+            DASH_IP=$( echo $IP | sed 's/\./-/g' )
+            HOSTNAME=$( hostname -s )-$DASH_IP.novalocal
+            hostnamectl set-hostname $HOSTNAME
             curl http://192.168.127.220:81/files/firstboot.sh --output firstboot.sh
             chmod 755 /firstboot.sh
             /firstboot.sh
