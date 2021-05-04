@@ -1,4 +1,5 @@
 node '$node.novalocal' {
+  $$fc_playlister_be_state_manifest = '$state'
   $$playlister_cassandra_delayed_install = false
   $$cassandra_seeds = '$seeds'
 

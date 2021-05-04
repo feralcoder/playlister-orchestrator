@@ -1,7 +1,7 @@
 ---
 cassandra::settings:
   cluster_name: $cluster_name
-cassandra::dc: $DC
+cassandra::dc: $dc
 cassandra::rack: $rack
 cassandra::package_ensure: $package_ensure
 cassandra::package_name: $package
