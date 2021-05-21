@@ -3,6 +3,10 @@ node '$node.novalocal' {
   $$playlister_cassandra_delayed_install = false
   $$cassandra_seeds = '$seeds'
 
+  class { 'fc_common::facts':
+    stage => 'puppet-init'
+  }
+
   class { 'fc_playlister_be::facts':
     stage => 'fc_playlister_be-init'
   }
