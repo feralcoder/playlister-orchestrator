@@ -5,3 +5,4 @@ cache/*
 playlister-python/cache/*
 !cache/README
 __pycache__/
+keypair.cliff_admin.private
