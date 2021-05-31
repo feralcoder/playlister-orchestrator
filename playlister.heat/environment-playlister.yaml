@@ -7,8 +7,10 @@ parameter_defaults:
   be_image: "centos-feralcoder-8.3"
   fe_instance_type: "m1.medium"
   be_instance_type: "m1.medium"
-  fe_ports: "80,443,8080,22"
-  be_ports: "22,7000,7001,7199,9042,9142,9160"
+#  fe_ports: "80,443,8080,22"
+# FROM CASSANDRA DAYS
+#  be_ports: "22,7000,7001,7199,9042,9142,9160"
+#  be_ports: "22,3306,8600-8630,8700,8800"
   fe_subnets: "admin1-subnet"
   fe_networks: "admin1-net"
   be_subnets: "admin1-subnet"
@@ -16,6 +18,7 @@ parameter_defaults:
 
   # VARS FOR playlister.yaml
   fe_vip: "172.30.1.11"
+  be_vip: "172.30.1.21"
   private_network: admin1-net
   public_network: public1
   vip_subnet: public1-subnet

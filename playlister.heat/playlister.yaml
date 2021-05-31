@@ -10,21 +10,38 @@ parameters:
     label: Front-Middle-End Instance Name
     description: Name to be used for all python service instance
     default: playlister_fe
-  fe_sg_ports:
+  fe_sg_port_mins:
     type: comma_delimited_list
-    label: Front-Middle-End Ports
-    description: Ports for python services to receive
+    label: Front-Middle-End Ports, Mins
+    description: Port range mins for python services to receive
+    default: "80,443,8080,22"
+  fe_sg_port_maxes:
+    type: comma_delimited_list
+    label: Front-Middle-End Ports, Maxes
+    description: Port range maxes for python services to receive
     default: "80,443,8080,22"
   be_name:
     type: string
     label: Cassandra Instance Name
     description: Name to be used for all cassandra instance
     default: playlister_be
-  be_sg_ports:
+#  be_sg_ports:
+#    type: comma_delimited_list
+#    label: Cassandra Ports
+#    description: Ports for cassandra service to receive
+#    default: "22,7000,7001,7199,9042,9142,9160"
+
+  # UGH - mins/maxes is a HACK!
+  be_sg_port_mins:
     type: comma_delimited_list
-    label: Cassandra Ports
-    description: Ports for cassandra service to receive
-    default: "22,7000,7001,7199,9042,9142,9160"
+    label: MariaDB ColumnStore Ports, Mins
+    description: Port range starts for mariadb columnstore service to receive
+    default: "22,3306,8600,8700,8800"
+  be_sg_port_maxes:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, Maxes
+    description: Port range ends for mariadb columnstore service to receive
+    default: "22,3306,8630,8700,8800"
   private_network:
     type: string
     description: Network used by the servers
@@ -97,11 +114,13 @@ resources:
       rules:
         repeat:
           for_each:
-            <%port%>: { get_param: be_sg_ports }
+            <%port_min%>: { get_param: be_sg_port_mins }
+            <%port_max%>: { get_param: be_sg_port_maxes }
           template:
             protocol: tcp
-            port_range_min: <%port%>
-            port_range_max: <%port%>
+            port_range_min: <%port_min%>
+            port_range_max: <%port_max%>
+          permutations: false
   fe_secgroup:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -110,11 +129,13 @@ resources:
       rules:
         repeat:
           for_each:
-            <%port%>: { get_param: fe_sg_ports }
+            <%port_min%>: { get_param: fe_sg_port_mins }
+            <%port_max%>: { get_param: fe_sg_port_maxes }
           template:
             protocol: tcp
-            port_range_min: <%port%>
-            port_range_max: <%port%>
+            port_range_min: <%port_min%>
+            port_range_max: <%port_max%>
+          permutations: false
 
 
   fe_80_monitor:

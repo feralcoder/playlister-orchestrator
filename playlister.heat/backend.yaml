@@ -10,11 +10,16 @@ parameters:
     label: Cassandra Instance Name
     description: Name to be used for all cassandra instance
     default: playlister_be
+#  be_sg_ports:
+#    type: comma_delimited_list
+#    label: Cassandra Ports
+#    description: Ports for cassandra service to receive
+#    default: "22,7000,7001,7199,9042,9142,9160"
   be_sg_ports:
     type: comma_delimited_list
-    label: Cassandra Ports
+    label: MariaDB ColumnStore Ports
     description: Ports for cassandra service to receive
-    default: "22,7000,7001,7199,9042,9142,9160"
+    default: "22,3306,8600-8630,8700,8800"
   be_secgroup_id:
     type: string
     description: Cassandra node Security Group

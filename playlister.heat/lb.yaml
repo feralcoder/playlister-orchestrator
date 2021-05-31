@@ -27,6 +27,11 @@ parameters:
     description: IP of frontend VIP
     constraints:
     default: "172.30.1.11"
+  be_vip:
+    type: string
+    description: IP of frontend VIP
+    constraints:
+    default: "172.30.1.21"
 
 resources:
   monitor:
@@ -81,6 +86,26 @@ resources:
     properties:
       vip_subnet: { get_param: public_network }
       vip_address: { get_param: fe_vip }
+
+  be_3306_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: TCP
+      listener: { get_resource: be_80_listener }
+  be_3306_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: be_loadbalancer }
+      protocol: TCP
+      protocol_port: 3306
+
+  be_loadbalancer:
+    type: OS::Octavia::LoadBalancer
+    properties:
+      vip_subnet: { get_param: public_network }
+      vip_address: { get_param: be_vip }
+
 
 #  floating_ip:
 #    type: OS::Neutron::FloatingIP
