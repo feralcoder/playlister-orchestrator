@@ -51,6 +51,7 @@ setup_venv () {
   pip3 install --upgrade python-keystoneclient
   pip3 install --upgrade python-ceilometer
   pip3 install --upgrade keystoneauth1
+  pip3 install --upgrade python-manilaclient
 }
 
 new_venv () {
