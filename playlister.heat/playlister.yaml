@@ -25,23 +25,25 @@ parameters:
     label: Cassandra Instance Name
     description: Name to be used for all cassandra instance
     default: playlister_be
-#  be_sg_ports:
-#    type: comma_delimited_list
-#    label: Cassandra Ports
-#    description: Ports for cassandra service to receive
-#    default: "22,7000,7001,7199,9042,9142,9160"
 
   # UGH - mins/maxes is a HACK!
+  # 3306 - Standard SQL Port
+  # 4444 - Galera State snapshot transfer
+  # 4567 - Galera Cluster Communication
+  # 4568 - Galera Incremental State Transfer
+  # 8600-8630 - ColumnStore
+  # 8700 - ColumnStore
+  # 8800 - ColumnStore
   be_sg_port_mins:
     type: comma_delimited_list
     label: MariaDB ColumnStore Ports, Mins
     description: Port range starts for mariadb columnstore service to receive
-    default: "22,3306,8600,8700,8800"
+    default: "22,3306,4444,4567,4568,8600,8700,8800"
   be_sg_port_maxes:
     type: comma_delimited_list
     label: MariaDB ColumnStore Ports, Maxes
     description: Port range ends for mariadb columnstore service to receive
-    default: "22,3306,8630,8700,8800"
+    default: "22,3306,4444,4567,4568,8630,8700,8800"
   private_network:
     type: string
     description: Network used by the servers
