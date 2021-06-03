@@ -1,27 +1,31 @@
 parameter_defaults:
-  fe_name: playlister_fe
-  be_name: playlister_be
+  fe_name: playlister1_fe
+  olap_name: playlister1_olap
+  oltp_name: playlister1_oltp
   fe_key_name: cliff_admin
-  be_key_name: cliff_admin
+  olap_key_name: cliff_admin
+  oltp_key_name: cliff_admin
   fe_image: "centos-feralcoder-8.3"
-  be_image: "centos-feralcoder-8.3"
+  olap_image: "centos-feralcoder-8.3"
+  oltp_image: "centos-feralcoder-8.3"
   fe_instance_type: "m1.medium"
-  be_instance_type: "m1.medium"
-#  fe_ports: "80,443,8080,22"
-# FROM CASSANDRA DAYS
-#  be_ports: "22,7000,7001,7199,9042,9142,9160"
-#  be_ports: "22,3306,8600-8630,8700,8800"
+  olap_instance_type: "m1.medium"
+  oltp_instance_type: "m1.medium"
   fe_subnets: "admin1-subnet"
   fe_networks: "admin1-net"
-  be_subnets: "admin1-subnet"
-  be_networks: "admin1-net"
+  olap_subnets: "admin1-subnet"
+  olap_networks: "admin1-net"
+  oltp_subnets: "admin1-subnet"
+  oltp_networks: "admin1-net"
 
   # VARS FOR playlister.yaml
   fe_vip: "172.30.1.11"
-  be_vip: "172.30.1.21"
+  olap_vip: "172.30.1.21"
+  oltp_vip: "172.30.1.31"
   private_network: admin1-net
   public_network: public1
   vip_subnet: public1-subnet
+
 
 #resource_registry:  
 #    "OS::Nova::Server::PLFrontend": "frontend.yaml"

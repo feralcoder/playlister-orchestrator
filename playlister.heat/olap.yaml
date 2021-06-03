@@ -1,0 +1,88 @@
+heat_template_version: 2018-08-31
+
+description: >
+  Template to deploy a layer of front-middle-ends with
+  a cassandra backend
+
+parameters:
+  olap_name:
+    type: string
+    label: Cassandra Instance Name
+    description: Name to be used for all cassandra instance
+    default: playlister_be
+#  olap_sg_ports:
+#    type: comma_delimited_list
+#    label: Cassandra Ports
+#    description: Ports for cassandra service to receive
+#    default: "22,7000,7001,7199,9042,9142,9160"
+  olap_sg_ports:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports
+    description: Ports for cassandra service to receive
+    default: "22,3306,8600-8630,8700,8800"
+  olap_secgroup_id:
+    type: string
+    description: Cassandra node Security Group
+  olap_key_name:
+    type: string
+    label: Cassandra Key Name
+    description: Name of key-pair to be used for all cassandra instance
+    default: cliff_admin
+  olap_image:
+    type: string
+    label: Cassandra Image ID
+    description: Image to be used for cassandra instance
+    default: "ubuntu-20.4"
+  olap_instance_type:
+    type: string
+    label: Cassandra Backend Instance Type
+    description: Type of instance (flavor) to be used for cassandra nodes
+    default: "m1.medium"
+  olap_subnets:
+    type: comma_delimited_list
+    label: Cassandra subnets
+    default: "admin1-subnet"
+  olap_networks:
+    type: comma_delimited_list
+    label: Cassandra networks
+    default: "admin1-net"
+
+
+
+resources:
+  olap_backend:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: olap_name }
+      key_name: { get_param: olap_key_name }
+      image: { get_param: olap_image }
+      flavor: { get_param: olap_instance_type }
+      security_groups: [default, { get_param: olap_secgroup_id }]
+      networks:
+        repeat:
+          for_each:
+            <%sub%>: { get_param: olap_subnets }
+            <%net%>: { get_param: olap_networks }
+          template:
+            network: <%net%>
+            subnet: <%sub%>
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            IP=$( ip add | grep 'inet ' | grep 10.254 | awk '{print $2}' | awk -F'/' '{print $1}' )
+            DASH_IP=$( echo $IP | sed 's/\./-/g' )
+            HOSTNAME=$( hostname -s )-$DASH_IP.novalocal
+            hostnamectl set-hostname $HOSTNAME
+            curl http://192.168.127.220:81/files/firstboot.sh --output firstboot.sh
+            chmod 755 /firstboot.sh
+            /firstboot.sh
+            EOF
+          params:
+            test1: stuff
+            test2: stuff
+outputs:
+  server_ip:
+    description: IP Address of the olap_backend node
+    value: { get_attr: [olap_backend, first_address] }

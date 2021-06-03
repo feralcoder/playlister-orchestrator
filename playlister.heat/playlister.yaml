@@ -20,7 +20,12 @@ parameters:
     label: Front-Middle-End Ports, Maxes
     description: Port range maxes for python services to receive
     default: "80,443,8080,22"
-  be_name:
+  oltp_name:
+    type: string
+    label: Cassandra Instance Name
+    description: Name to be used for all cassandra instance
+    default: playlister_be
+  olap_name:
     type: string
     label: Cassandra Instance Name
     description: Name to be used for all cassandra instance
@@ -34,16 +39,26 @@ parameters:
   # 8600-8630 - ColumnStore
   # 8700 - ColumnStore
   # 8800 - ColumnStore
-  be_sg_port_mins:
+  olap_sg_port_mins:
     type: comma_delimited_list
     label: MariaDB ColumnStore Ports, Mins
     description: Port range starts for mariadb columnstore service to receive
-    default: "22,3306,4444,4567,4568,8600,8700,8800"
-  be_sg_port_maxes:
+    default: "22,3306,8600,8700,8800"
+  olap_sg_port_maxes:
     type: comma_delimited_list
     label: MariaDB ColumnStore Ports, Maxes
     description: Port range ends for mariadb columnstore service to receive
-    default: "22,3306,4444,4567,4568,8630,8700,8800"
+    default: "22,3306,8630,8700,8800"
+  oltp_sg_port_mins:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, Mins
+    description: Port range starts for mariadb columnstore service to receive
+    default: "22,3306,4444,4567,4568"
+  oltp_sg_port_maxes:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, Maxes
+    description: Port range ends for mariadb columnstore service to receive
+    default: "22,3306,4444,4567,4568"
   private_network:
     type: string
     description: Network used by the servers
@@ -67,6 +82,16 @@ parameters:
     description: IP of frontend VIP
     constraints:
     default: "172.30.1.11"
+  olap_vip:
+    type: string
+    description: IP of frontend VIP
+    constraints:
+    default: "172.30.1.21"
+  oltp_vip:
+    type: string
+    description: IP of frontend VIP
+    constraints:
+    default: "172.30.1.31"
 
 
 resources:
@@ -97,27 +122,53 @@ resources:
       max_size: 10
       min_size: 3
       desired_capacity: 3
-  backends:
+  olap_backends:
     type: OS::Heat::AutoScalingGroup
     properties:
       resource:
-        type: backend.yaml
+        type: olap.yaml
         properties:
-          be_secgroup_id: { get_resource: be_secgroup }
+          olap_secgroup_id: { get_resource: olap_secgroup }
       cooldown: 60
       max_size: 10
       min_size: 4
       desired_capacity: 4
-  be_secgroup:
+  oltp_backends:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: oltp.yaml
+        properties:
+          oltp_secgroup_id: { get_resource: oltp_secgroup }
+      cooldown: 60
+      max_size: 10
+      min_size: 4
+      desired_capacity: 4
+  olap_secgroup:
     type: OS::Neutron::SecurityGroup
     properties:
       name:
-        list_join: ['_', [ {get_param: be_name}, 'secgroup']]
+        list_join: ['_', [ {get_param: olap_name}, 'secgroup']]
       rules:
         repeat:
           for_each:
-            <%port_min%>: { get_param: be_sg_port_mins }
-            <%port_max%>: { get_param: be_sg_port_maxes }
+            <%port_min%>: { get_param: olap_sg_port_mins }
+            <%port_max%>: { get_param: olap_sg_port_maxes }
+          template:
+            protocol: tcp
+            port_range_min: <%port_min%>
+            port_range_max: <%port_max%>
+          permutations: false
+  oltp_secgroup:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: oltp_name}, 'secgroup']]
+      rules:
+        repeat:
+          for_each:
+            <%port_min%>: { get_param: oltp_sg_port_mins }
+            <%port_max%>: { get_param: oltp_sg_port_maxes }
           template:
             protocol: tcp
             port_range_min: <%port_min%>
@@ -209,6 +260,45 @@ resources:
       vip_subnet: { get_param: vip_subnet }
       vip_address: { get_param: fe_vip }
 
+  olap_3306_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: TCP
+      listener: { get_resource: olap_3306_listener }
+  olap_3306_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: olap_loadbalancer }
+      protocol: TCP
+      protocol_port: 3306
+
+  olap_loadbalancer:
+    type: OS::Octavia::LoadBalancer
+    properties:
+      vip_subnet: { get_param: vip_subnet }
+      vip_address: { get_param: olap_vip }
+
+  oltp_3306_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: TCP
+      listener: { get_resource: oltp_3306_listener }
+  oltp_3306_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: oltp_loadbalancer }
+      protocol: TCP
+      protocol_port: 3306
+
+  oltp_loadbalancer:
+    type: OS::Octavia::LoadBalancer
+    properties:
+      vip_subnet: { get_param: vip_subnet }
+      vip_address: { get_param: oltp_vip }
+
+
   fe_scaleup_policy:
     type: OS::Heat::ScalingPolicy
     properties:
@@ -223,18 +313,32 @@ resources:
       auto_scaling_group_id: {get_resource: frontends}
       cooldown: 60
       scaling_adjustment: -1
-  be_scaleup_policy:
+  olap_scaleup_policy:
     type: OS::Heat::ScalingPolicy
     properties:
       adjustment_type: change_in_capacity
-      auto_scaling_group_id: {get_resource: backends}
+      auto_scaling_group_id: {get_resource: olap_backends}
       cooldown: 60
       scaling_adjustment: 1
-  be_scaledown_policy:
+  olap_scaledown_policy:
     type: OS::Heat::ScalingPolicy
     properties:
       adjustment_type: change_in_capacity
-      auto_scaling_group_id: {get_resource: backends}
+      auto_scaling_group_id: {get_resource: olap_backends}
+      cooldown: 60
+      scaling_adjustment: -1
+  oltp_scaleup_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: oltp_backends}
+      cooldown: 60
+      scaling_adjustment: 1
+  oltp_scaledown_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: oltp_backends}
       cooldown: 60
       scaling_adjustment: -1
 
@@ -264,7 +368,7 @@ resources:
         - {get_attr: [fe_scaledown_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
       comparison_operator: lt
-  be_cpu_alarm_high:
+  olap_cpu_alarm_high:
     type: OS::Ceilometer::Alarm
     properties:
       description: Scale-up if the average CPU > 50% for 1 minute
@@ -274,10 +378,10 @@ resources:
       evaluation_periods: 1
       threshold: 50
       alarm_actions:
-        - {get_attr: [be_scaleup_policy, alarm_url]}
+        - {get_attr: [olap_scaleup_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
       comparison_operator: gt
-  be_cpu_alarm_low:
+  olap_cpu_alarm_low:
     type: OS::Ceilometer::Alarm
     properties:
       description: Scale-down if the average CPU < 15% for 10 minutes
@@ -287,15 +391,49 @@ resources:
       evaluation_periods: 1
       threshold: 15
       alarm_actions:
-        - {get_attr: [be_scaledown_policy, alarm_url]}
+        - {get_attr: [olap_scaledown_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt
+  oltp_cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 1 minute
+      meter_name: cpu_util
+      statistic: avg
+      period: 60
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [oltp_scaleup_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+  oltp_cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 10 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 15
+      alarm_actions:
+        - {get_attr: [oltp_scaledown_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
       comparison_operator: lt
 
 
 outputs:
-  vip_ip:
+  fe_vip_ip:
     description: IP Address of the LB VIP
     value: { get_attr: [fe_loadbalancer, vip_address] }
+
+  olap_vip_ip:
+    description: IP Address of the OLAP VIP
+    value: { get_attr: [olap_loadbalancer, vip_address] }
+
+  oltp_vip_ip:
+    description: IP Address of the OLTP VIP
+    value: { get_attr: [oltp_loadbalancer, vip_address] }
 
   fe_scale_up_url:
     description: >
@@ -309,18 +447,30 @@ outputs:
       You can invoke the scale-down operation by doing an HTTP POST to
       this URL; no body nor extra headers are needed.
     value: {get_attr: [fe_scaledown_policy, alarm_url]}
-  be_scale_up_url:
+  olap_scale_up_url:
     description: >
       This URL is the webhook to scale up the autoscaling group.  You
       can invoke the scale-up operation by doing an HTTP POST to this
       URL; no body nor extra headers are needed.
-    value: {get_attr: [be_scaleup_policy, alarm_url]}
-  be_scale_dn_url:
+    value: {get_attr: [olap_scaleup_policy, alarm_url]}
+  olap_scale_dn_url:
     description: >
       This URL is the webhook to scale down the autoscaling group.
       You can invoke the scale-down operation by doing an HTTP POST to
       this URL; no body nor extra headers are needed.
-    value: {get_attr: [be_scaledown_policy, alarm_url]}
+    value: {get_attr: [olap_scaledown_policy, alarm_url]}
+  oltp_scale_up_url:
+    description: >
+      This URL is the webhook to scale up the autoscaling group.  You
+      can invoke the scale-up operation by doing an HTTP POST to this
+      URL; no body nor extra headers are needed.
+    value: {get_attr: [oltp_scaleup_policy, alarm_url]}
+  oltp_scale_dn_url:
+    description: >
+      This URL is the webhook to scale down the autoscaling group.
+      You can invoke the scale-down operation by doing an HTTP POST to
+      this URL; no body nor extra headers are needed.
+    value: {get_attr: [oltp_scaledown_policy, alarm_url]}
 
   ceilometer_query:
     value:

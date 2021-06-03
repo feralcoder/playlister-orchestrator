@@ -1,22 +1,27 @@
 parameter_defaults:
   fe_name: playlister4_fe
-  be_name: playlister4_be
+  olap_name: playlister4_olap
+  oltp_name: playlister4_oltp
   fe_key_name: cliff_admin
-  be_key_name: cliff_admin
+  olap_key_name: cliff_admin
+  oltp_key_name: cliff_admin
   fe_image: "centos-feralcoder-8.3"
-  be_image: "centos-feralcoder-8.3"
+  olap_image: "centos-feralcoder-8.3"
+  oltp_image: "centos-feralcoder-8.3"
   fe_instance_type: "m1.medium"
-  be_instance_type: "m1.medium"
-#  fe_ports: "80,443,8080,22"
-#  be_ports: "22,7000,7001,7199,9042,9142,9160"
+  olap_instance_type: "m1.medium"
+  oltp_instance_type: "m1.medium"
   fe_subnets: "admin1-subnet"
   fe_networks: "admin1-net"
-  be_subnets: "admin1-subnet"
-  be_networks: "admin1-net"
+  olap_subnets: "admin1-subnet"
+  olap_networks: "admin1-net"
+  oltp_subnets: "admin1-subnet"
+  oltp_networks: "admin1-net"
 
   # VARS FOR playlister.yaml
   fe_vip: "172.30.1.14"
-  be_vip: "172.30.1.24"
+  olap_vip: "172.30.1.24"
+  oltp_vip: "172.30.1.34"
   private_network: admin1-net
   public_network: public1
   vip_subnet: public1-subnet

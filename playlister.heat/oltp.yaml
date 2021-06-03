@@ -5,44 +5,44 @@ description: >
   a cassandra backend
 
 parameters:
-  be_name:
+  oltp_name:
     type: string
     label: Cassandra Instance Name
     description: Name to be used for all cassandra instance
     default: playlister_be
-#  be_sg_ports:
+#  oltp_sg_ports:
 #    type: comma_delimited_list
 #    label: Cassandra Ports
 #    description: Ports for cassandra service to receive
 #    default: "22,7000,7001,7199,9042,9142,9160"
-  be_sg_ports:
+  oltp_sg_ports:
     type: comma_delimited_list
     label: MariaDB ColumnStore Ports
     description: Ports for cassandra service to receive
     default: "22,3306,8600-8630,8700,8800"
-  be_secgroup_id:
+  oltp_secgroup_id:
     type: string
     description: Cassandra node Security Group
-  be_key_name:
+  oltp_key_name:
     type: string
     label: Cassandra Key Name
     description: Name of key-pair to be used for all cassandra instance
     default: cliff_admin
-  be_image:
+  oltp_image:
     type: string
     label: Cassandra Image ID
     description: Image to be used for cassandra instance
     default: "ubuntu-20.4"
-  be_instance_type:
+  oltp_instance_type:
     type: string
     label: Cassandra Backend Instance Type
     description: Type of instance (flavor) to be used for cassandra nodes
     default: "m1.medium"
-  be_subnets:
+  oltp_subnets:
     type: comma_delimited_list
     label: Cassandra subnets
     default: "admin1-subnet"
-  be_networks:
+  oltp_networks:
     type: comma_delimited_list
     label: Cassandra networks
     default: "admin1-net"
@@ -50,19 +50,19 @@ parameters:
 
 
 resources:
-  backend:
+  oltp_backend:
     type: OS::Nova::Server
     properties:
-      name: { get_param: be_name }
-      key_name: { get_param: be_key_name }
-      image: { get_param: be_image }
-      flavor: { get_param: be_instance_type }
-      security_groups: [default, { get_param: be_secgroup_id }]
+      name: { get_param: oltp_name }
+      key_name: { get_param: oltp_key_name }
+      image: { get_param: oltp_image }
+      flavor: { get_param: oltp_instance_type }
+      security_groups: [default, { get_param: oltp_secgroup_id }]
       networks:
         repeat:
           for_each:
-            <%sub%>: { get_param: be_subnets }
-            <%net%>: { get_param: be_networks }
+            <%sub%>: { get_param: oltp_subnets }
+            <%net%>: { get_param: oltp_networks }
           template:
             network: <%net%>
             subnet: <%sub%>
@@ -84,5 +84,5 @@ resources:
             test2: stuff
 outputs:
   server_ip:
-    description: IP Address of the backend node
-    value: { get_attr: [backend, first_address] }
+    description: IP Address of the oltp_backend node
+    value: { get_attr: [oltp_backend, first_address] }

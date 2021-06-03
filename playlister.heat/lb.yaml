@@ -27,11 +27,16 @@ parameters:
     description: IP of frontend VIP
     constraints:
     default: "172.30.1.11"
-  be_vip:
+  olap_vip:
     type: string
-    description: IP of frontend VIP
+    description: IP of OLAP VIP
     constraints:
     default: "172.30.1.21"
+  oltp_vip:
+    type: string
+    description: IP of OLTP VIP
+    constraints:
+    default: "172.30.1.31"
 
 resources:
   monitor:
@@ -87,24 +92,43 @@ resources:
       vip_subnet: { get_param: public_network }
       vip_address: { get_param: fe_vip }
 
-  be_3306_pool:
+  olap_3306_pool:
     type: OS::Octavia::Pool
     properties:
       lb_algorithm: ROUND_ROBIN
       protocol: TCP
-      listener: { get_resource: be_80_listener }
-  be_3306_listener:
+      listener: { get_resource: olap_3306_listener }
+  olap_3306_listener:
     type: OS::Octavia::Listener
     properties:
-      loadbalancer: { get_resource: be_loadbalancer }
+      loadbalancer: { get_resource: olap_loadbalancer }
       protocol: TCP
       protocol_port: 3306
 
-  be_loadbalancer:
+  olap_loadbalancer:
     type: OS::Octavia::LoadBalancer
     properties:
       vip_subnet: { get_param: public_network }
-      vip_address: { get_param: be_vip }
+      vip_address: { get_param: olap_vip }
+
+  oltp_3306_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: TCP
+      listener: { get_resource: oltp_3306_listener }
+  oltp_3306_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: oltp_loadbalancer }
+      protocol: TCP
+      protocol_port: 3306
+
+  oltp_loadbalancer:
+    type: OS::Octavia::LoadBalancer
+    properties:
+      vip_subnet: { get_param: public_network }
+      vip_address: { get_param: oltp_vip }
 
 
 #  floating_ip:
