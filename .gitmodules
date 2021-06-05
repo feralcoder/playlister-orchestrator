@@ -1,3 +1,3 @@
-[submodule "puppet-manifests"]
+[submodule "playlister-python/puppet-manifests"]
 	path = playlister-python/puppet-manifests
 	url = https://feralcoder:7l0RnBkNceyP@github.com/feralcoder/puppet-manifests.git

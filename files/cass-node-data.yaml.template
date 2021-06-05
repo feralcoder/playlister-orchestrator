@@ -1,0 +1,9 @@
+---
+cassandra::settings:
+  cluster_name: $cluster_name
+cassandra::dc: $dc
+cassandra::rack: $rack
+cassandra::package_ensure: $package_ensure
+cassandra::package_name: $package
+# Service startup/shutdown will be done by state management code in coordinated fashion
+cassandra::service_enable: false
