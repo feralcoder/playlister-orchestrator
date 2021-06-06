@@ -9,6 +9,7 @@ class PuppetManifest ():
     self.cluster_name = cluster_name
     self.cluster_path = "{0}/{1}".format(manifest_path, cluster_name)
     self.environment = environment
+    self.puppetmaster = puppetmaster
 
   def git_pull(self):
     try:

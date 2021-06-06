@@ -1,9 +1,9 @@
 import time
 from .playlister_state_machine import PlaylisterStateMachine
 
-class PlaylisterDeployer ():
+class PlaylisterDeployerCassandra ():
   def __init__(self, name, manifest, script_dir):
-    self.playlister_backend_state = PlaylisterStateMachine(name, manifest, script_dir, reinitialize=True)
+    self.playlister_backend_state = PlaylisterStateMachineCassandra(name, manifest, script_dir, reinitialize=True)
 
   def shutdown_cassandra(self):
     self.playlister_backend_state.setNodeStateAll('stopping')

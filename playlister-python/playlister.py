@@ -11,7 +11,7 @@ puppetmaster = 'puppetmaster.feralcoder.org'
 if __name__ == "__main__":
   manifest = PuppetManifest(manifest_dir, stack_name, "production", puppetmaster)
   manifest.git_pull()
-  playlister_deployer = PlaylisterDeployer(stack_name, manifest)
+  playlister_deployer = PlaylisterDeployer(stack_name, manifest, script_dir)
 
   # NEW MARIADB WAY
   #playlister_deployer.deploy_this_thing()
