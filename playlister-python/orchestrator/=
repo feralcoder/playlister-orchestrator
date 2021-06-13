@@ -26,6 +26,9 @@ class PlaylisterStateMachine ():
       self.playlister_cluster.parse_manifest_details(stack_details)
       self.create_cluster()
 
+  ### REFACTOR
+  # ATM, this creates each node in 'initial_build' state...
+  ### CLUSTER TRANSITIONS
   def create_cluster(self):
     if not self.manifest.cluster_exists():
       self.manifest.new_cluster()
@@ -64,33 +67,33 @@ class PlaylisterStateMachine ():
     self.manifest.remove_node(node_name, push)
     if node_name in self.node_managers.keys(): del self.node_managers[node_name]
 
-  def get_node_state(self, node):
+  def getNodeState(self, node):
     node_facts = self.playlister_cluster.get_configs(node)['facts']
     live_state = self.node_managers[node['name']].get_puppet_state()
-    raise Exception("get_node_state not finished implemented! Node facts: {0}\nLive state: {1}".format(node_facts, live_state))
+    raise Exception("getNodeState not finished implemented! Node facts: {0}\nLive state: {1}".format(node_facts, live_state))
     # GET STATE FROM LIVE MACHINE
     # RETURN state = {'state':xxx, 'stage':<pre-transition|transitioning|transitioned>}
 
-  def set_node_state(self, node, state, push=False):
+  def setNodeState(self, node, state, push=False):
     logging.info("Setting node {0} state to {1}.".format(node['name'], state))
     configs = self.playlister_cluster.configure_node(node, state)
     self.manifest.configure_node(node, configs, push)
 
-  def set_node_state_all(self, node_type, state, push=False):
+  def setNodeStateAll(self, node_type, state, push=False):
     logging.info("Setting all {0} nodes state to {1}.".format(node_type, state))
     for node in self.playlister_cluster.nodes[node_type]:
-      self.set_node_state(node, state, push)
+      self.setNodeState(node, state, push)
 
-  def transition_node_state(self, node):
+  def transitionNodeState(self, node):
     logging.info("Transitioning node {0} to new state.".format(node['name']))
     self.deploy_node_configs(node)
     self.node_managers[node['name']].puppet_update()
 
-  def transition_node_state_all(self, node_type):
+  def transitionNodeStateAll(self, node_type):
     logging.info("Transitioning all {0} nodes to new state.".format(node_type))
     parallelism = 5
     with Pool(processes=parallelism) as pool:
-      result = pool.map(self.transition_node_state, self.playlister_cluster.nodes[node_type])
+      result = pool.map(self.transitionNodeState, self.playlister_cluster.nodes[node_type])
 
 
   ### NODE OPERATIONS
@@ -124,10 +127,10 @@ class PlaylisterStateMachine ():
     self.backup_columnstore_cluster()
 
   def start_transaction_db(self):
-    self.start_galera_cluster()
+    raise Exception("start_transaction_db not yet implemented!")
 
   def stop_transaction_db(self):
-    self.stop_galera_cluster()
+    raise Exception("stop_transaction_db not yet implemented!")
 
   def start_analytics_db(self):
     raise Exception("start_analytics_db not yet implemented!")
@@ -135,15 +138,12 @@ class PlaylisterStateMachine ():
   def stop_analytics_db(self):
     raise Exception("stop_analytics_db not yet implemented!")
 
-  def deploy_playlister_code(self, parallel=False):
-    self.deploy_frontend_code(parallel)
-
 
 
   ### FRONTEND TRANSITIONS
   def install_frontends(self):
-    self.set_node_state_all('FE', 'initial_build', push=True)
-    self.transition_node_state_all('FE')
+    self.setNodeStateAll('FE', 'initial_build', push=True)
+    self.transitionNodeStateAll('FE')
     for node in self.playlister_cluster.nodes['FE']:
       node_state = self.node_managers[node['name']].get_puppet_state()
       logging.info("node {0} state: {1}".format(node['name'], node_state))
@@ -153,22 +153,10 @@ class PlaylisterStateMachine ():
   def install_frontend_node(self, node):
     raise Exception("install_frontend_node not yet implemented!")
 
-  def deploy_frontend_code(self, parallel=False):
-    self.set_node_state_all('FE', 'deploy', push=True)
-    if parallel:
-      self.transition_node_state_all('FE')
-    for node in self.playlister_cluster.nodes['FE']:
-      if not parallel:
-        self.transition_node_state(node)
-      node_state = self.node_managers[node['name']].get_puppet_state()
-      logging.info("node {0} state: {1}".format(node['name'], node_state))
-      if not (node_state['state'] == 'fc_playlister_fe_deploy' and node_state['transition'] == 'finished'):
-        raise Exception("Node {0} has not reached 'fc_playlister_fe_deploy_finished': {1}".format(node['name'], node_state))
-
   ### GALERA OLTP TRANSITIONS
   def install_galera_cluster(self):
-    self.set_node_state_all('OLTP', 'initial_build', push=True)
-    self.transition_node_state_all('OLTP')
+    self.setNodeStateAll('OLTP', 'initial_build', push=True)
+    self.transitionNodeStateAll('OLTP')
     for node in self.playlister_cluster.nodes['OLTP']:
       node_state = self.node_managers[node['name']].get_puppet_state()
       logging.info("node {0} state: {1}".format(node['name'], node_state))
@@ -178,60 +166,31 @@ class PlaylisterStateMachine ():
   def install_galera_node(self, node):
     raise Exception("install_galera_node not yet implemented!")
 
-  def assert_galera_cluster_stopped(self):
-    for node in self.playlister_cluster.nodes['OLTP']:
-      logging.info("Checking galera service state on {0}".format(node['name']))
-      logging.info("/usr/bin/systemctl status mariadb | grep Active | grep 'inactive\|failed\|dead'")
-      result = self.node_managers[node['name']].host_commander.run("/usr/bin/systemctl status mariadb | grep Active | grep 'inactive\|failed\|dead'", user='root')
-      if not result[0] == 0:
-        raise Exception("MariaDB is not inactive, failed, or dead on host {0}: {1}".format( node['name'], result[2]))
-
   def identify_latest_galera_node(self):
     seqnos = {}
     for node in self.playlister_cluster.nodes['OLTP']:
       logging.info("Checking galera state on {0}".format(node['name']))
       logging.info("/usr/bin/grep seqno /cephfs-data/{0}/galera/{1}.novalocal/grastate.dat | awk '{{print $2}}'".format(self.playlister_cluster.cluster_data['CLUSTER_NAME'], node['name']))
-      seqno_result = self.node_managers[node['name']].host_commander.run("/usr/bin/grep seqno /cephfs-data/{0}/galera/{1}.novalocal/grastate.dat | awk '{{print $2}}'".format(self.playlister_cluster.cluster_data['CLUSTER_NAME'], node['name']), user='root')
+      seqno_result = self.node_managers[node['name']].host_commander.run("/usr/bin/grep seqno /cephfs-data/{0}/galera/{1}.novalocal/grastate.dat | awk '{{print $2}}' | sed 's/\n//g'".format(self.playlister_cluster.cluster_data['CLUSTER_NAME'], node['name']), user='root')
       logging.info("SEQNO RESULT: {0}".format(seqno_result))
       if seqno_result[0] == 0:
-        result = int(seqno_result[1].rstrip())
-        if not result == -1:
-          seqnos[result] = node['name']
+        seqnos[seqno_result[1]] = node['name']
+    #return self.playlister_cluster.nodes['OLTP'][seqnos.keys().sorted()[0]]
     logging.info("seqno map: {0}".format(seqnos))
     logging.info("seqno keys: {0}".format(sorted(seqnos.keys())))
-    if seqnos:
-      leader_name = seqnos[sorted(seqnos.keys())[-1]]
-      return list(filter(lambda x: (x['name'] == leader_name), self.playlister_cluster.nodes['OLTP']))[0]
-    else:
-      return None
+    return self.playlister_cluster.nodes['OLTP'][0]
 
   def preinitialize_galera_cluster(self):
-    self.set_node_state_all('OLTP', 'preinitialize', push=True)
-    self.transition_node_state_all('OLTP')
+    self.setNodeStateAll('OLTP', 'preinitialize', push=True)
+    self.transitionNodeStateAll('OLTP')
     for node in self.playlister_cluster.nodes['OLTP']:
       node_state = self.node_managers[node['name']].get_puppet_state()
       logging.info("node {0} state: {1}".format(node['name'], node_state))
       if not (node_state['state'] == 'fc_playlister_oltp_preinitialize' and node_state['transition'] == 'finished'):
         raise Exception("Node {0} has not reached 'fc_playlister_oltp_preinitialize_finished': {1}".format(node['name'], node_state))
 
-  def start_galera_cluster(self):
-    self.assert_galera_cluster_stopped()
-    primary_node = self.identify_latest_galera_node()
-    if not primary_node:
-      raise Exception("No suitable galera leader found!")
-    primary_index = self.playlister_cluster.nodes['OLTP'].index(primary_node)
-    logging.info("Primary OLTP node is {0}, index {1}".format(primary_node['name'], primary_index))
-    #self.preinitialize_galera_cluster()
-
-    self.initialize_galera_primary_node(primary_node)
-    self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:primary_index])
-    self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][primary_index+1:])
-
   def initialize_galera_cluster(self):
-    self.stop_galera_cluster()
     primary_node = self.identify_latest_galera_node()
-    if not primary_node:
-      raise Exception("No suitable galera leader found!")
     primary_index = self.playlister_cluster.nodes['OLTP'].index(primary_node)
     logging.info("Primary OLTP node is {0}, index {1}".format(primary_node['name'], primary_index))
     self.preinitialize_galera_cluster()
@@ -241,8 +200,8 @@ class PlaylisterStateMachine ():
     self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][primary_index+1:])
 
   def initialize_galera_primary_node(self, node):
-    self.set_node_state(node, 'initialize_primary_node', push=True)
-    self.transition_node_state(node)
+    self.setNodeState(node, 'initialize_primary_node', push=True)
+    self.transitionNodeState(node)
     node_state = self.node_managers[node['name']].get_puppet_state()
     logging.info("node {0} state: {1}".format(node['name'], node_state))
     if not (node_state['state'] == 'fc_playlister_oltp_initialize_primary_node' and node_state['transition'] == 'finished'):
@@ -250,24 +209,12 @@ class PlaylisterStateMachine ():
 
   def initialize_galera_secondary_nodes(self, nodes):
     for node in nodes:
-      self.set_node_state(node, 'join', push=True)
-      self.transition_node_state(node)
+      self.setNodeState(node, 'join', push=True)
+      self.transitionNodeState(node)
       node_state = self.node_managers[node['name']].get_puppet_state()
       logging.info("node {0} state: {1}".format(node['name'], node_state))
       if not (node_state['state'] == 'fc_playlister_oltp_join' and node_state['transition'] == 'finished'):
         raise Exception("Node {0} has not reached 'fc_playlister_oltp_join_finished': {1}".format(node['name'], node_state))
-
-  def stop_galera_cluster(self):
-    for node in self.playlister_cluster.nodes['OLTP']:
-      self.set_node_state(node, 'stop', push=True)
-      self.transition_node_state(node)
-      node_state = self.node_managers[node['name']].get_puppet_state()
-      logging.info("node {0} state: {1}".format(node['name'], node_state))
-      if not (node_state['state'] == 'fc_playlister_oltp_stop' and node_state['transition'] == 'finished'):
-        raise Exception("Node {0} has not reached 'fc_playlister_oltp_stop_finished': {1}".format(node['name'], node_state))
-
-  def stop_galera_node(self, node):
-    raise Exception("stop_galera_node not yet implemented!")
 
   def restore_galera_cluster(self):
     raise Exception("restore_galera_cluster not yet implemented!")
@@ -305,10 +252,16 @@ class PlaylisterStateMachine ():
   def nominalize_galera_node(self, node):
     raise Exception("nominalize_galera_node not yet implemented!")
 
+  def stop_galera_cluster(self):
+    raise Exception("stop_galera_cluster not yet implemented!")
+
+  def stop_galera_node(self, node):
+    raise Exception("stop_galera_node not yet implemented!")
+
   ### COLUMNSTORE OLAP TRANSITIONS 
   def install_columnstore_cluster(self):
-    self.set_node_state_all('OLAP', 'initial_build', push=True)
-    self.transition_node_state_all('OLAP')
+    self.setNodeStateAll('OLAP', 'initial_build', push=True)
+    self.transitionNodeStateAll('OLAP')
     for node in self.playlister_cluster.nodes['OLAP']:
       node_state = self.node_managers[node['name']].get_puppet_state()
       logging.info("node {0} state: {1}".format(node['name'], node_state))

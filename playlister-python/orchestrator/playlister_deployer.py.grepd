@@ -1,0 +1,14 @@
+class PlaylisterDeployer ():
+  def __init__(self, name, manifest, script_dir):
+  def create_cluster(self):
+  def create_transaction_db(self):
+  def create_analytics_db(self):
+  def start_transaction_db(self):
+  def stop_transaction_db(self):
+  def start_analytics_db(self):
+  def stop_analytics_db(self):
+#  def shutdown_cassandra(self):
+#  def deploy_this_thing(self):
+#  def start_cassandra(self):
+#  def load_schema(self):
+#  def nominalize(self):

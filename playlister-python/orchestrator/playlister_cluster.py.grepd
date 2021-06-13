@@ -1,0 +1,9 @@
+class PlaylisterCluster ():
+  def __init__(self, name, reinitialize=False):
+  def init_markup_maps(self):
+  def parse_manifest_details(self):
+  def parse_openstack_details(self, stack_details):
+  def remove_node(self, node_name):
+  def configure_node(self, node, state):
+#  def configure_nodes(self):
+  def get_node_config(self, node):

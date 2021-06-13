@@ -1,0 +1,45 @@
+class PlaylisterStateMachine ():
+  def __init__(self, name, manifest, script_dir, reinitialize=True):
+  def create_cluster(self):
+  def create_transaction_db(self):
+  def create_analytics_db(self):
+  def start_transaction_db(self):
+  def stop_transaction_db(self):
+  def start_analytics_db(self):
+  def stop_analytics_db(self):
+  def create_frontends(self):
+  def create_frontend_node(self, node):
+  def create_galera_cluster(self):
+  def create_galera_node(self, node):
+  def bootstrap_galera_primary_node(self, node):
+  def load_galera_schema_on_node(self, node):
+  def use_galera_storage_on_node(self, node):
+  def bootstrap_galera_secondary_node(self, node):
+  def sync_galera_node_from_primary(self, node):
+  def nominalize_galera_cluster(self):
+  def nominalize_galera_node(self, node):
+  def stop_galera_cluster(self):
+  def stop_galera_node(self, node):
+  def create_columnstore_cluster(self):
+  def create_columnstore_node(self, node):
+  def load_columnstore_schema_on_node(self, node):
+  def use_columnstore_storage_on_node(self, node):
+  def configure_columnstore_follow_galera(self):
+  def nominalize_columnstore_cluster(self):
+  def nominalize_columnstore_node(self, node):
+  def stop_columnstore_cluster(self):
+  def stop_columnstore_node(self, node):
+  def getNodeState(self, node):
+  def setNodeState(self, node, state):
+  def setNodeStateAll(self, node_type, state):
+  def getOLTPPrimaryNode(self):
+  def getNodes(self, node_type):
+  def remove_node(self, node_name):
+  def get_stack_details_from_manifest(self):
+  def get_stack_details_from_openstack(self, force_refresh=False):
+  def clear_cluster(self):
+  def create_cluster(self):
+  def transitionNodeState(self, node):
+  def transitionNodeStateAll(self):
+  def deploy_node_configs_to_puppetmaster(self, node):
+  def remove_node_from_puppetmaster(self, node_name):

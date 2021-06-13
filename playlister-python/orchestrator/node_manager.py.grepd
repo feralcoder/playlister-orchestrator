@@ -1,0 +1,8 @@
+class NodeManager ():
+  def __init__(self, cluster_config_path, node):
+  def puppet_update(self):
+  def get_puppet_state(self):
+#  def start_cass_full_repair(self):
+#  def get_cass_repair_status(self):
+#  def get_cass_node_state(self, node):
+#  def wait_for_cassandra_up(self):

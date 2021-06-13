@@ -1,0 +1,16 @@
+class PlaylisterStateMachineCassandra ():
+  def __init__(self, name, manifest, script_dir, reinitialize=True):
+  def getNodeState(self, node):
+  def setNodeState(self, node, state):
+  def setNodeStateAll(self, state):
+  def getPrimary(self):
+  def getNodes(self):
+  def remove_node(self, node_name):
+  def get_stack_details_from_manifest(self):
+  def get_stack_details_from_openstack(self, force_refresh=False):
+  def clear_cluster(self):
+  def create_cluster(self):
+  def transitionNodeState(self, node):
+  def transitionNodeStateAll(self):
+  def deploy_node_configs_to_puppetmaster(self, node):
+  def remove_node_from_puppetmaster(self, node_name):

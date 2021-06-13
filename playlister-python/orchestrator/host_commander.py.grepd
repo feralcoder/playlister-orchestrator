@@ -1,0 +1,4 @@
+class HostCommander ():
+  def __init__(self, user, key_path):
+  def reset_fingerprint(self, host):
+  def run(self, host, command):

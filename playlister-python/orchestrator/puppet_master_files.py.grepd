@@ -1,0 +1,4 @@
+class PuppetMasterFiles ():
+  def __init__(self, puppetmaster, code_dir='/etc/puppetlabs/code/environments/production'):
+  def sync(self, source_file, dest_file):
+  def delete(self, dest_file):

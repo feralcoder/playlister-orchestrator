@@ -1,0 +1,9 @@
+class PuppetManifest ():
+  def __init__(self, manifest_path, cluster_name, environment, puppetmaster):
+  def git_pull(self):
+  def new_cluster(self):
+  def configure_node(self, node, node_configs):
+  def get_node_list(self):
+  def write_node_list(self, node_list):
+  def cluster_exists(self):
+  def remove_node(self, node_name):
