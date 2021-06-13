@@ -75,12 +75,8 @@ gather_stack_facts () {
 
 }
 
-#get_cassandra_seeds () {
-#  SEEDS=$(openstack stack show $STACK_ID  -c tags | sed 's/ /\n/g' | grep SEEDS | awk -F'=' '{print $2}' | sed 's/:/,/g') || return 1
-#  echo "$SEEDS"
-#}
-
 gather_stack_facts || exit 1
+echo CLUSTER_NAME: $STACK_NAME
 echo FE_VIP: $FE_VIP
 echo FE_IPS: $FE_IPS
 echo OLAP_VIP: $OLAP_VIP
@@ -88,7 +84,6 @@ echo OLAP_IPS: $OLAP_IPS
 echo OLTP_VIP: $OLTP_VIP
 echo OLTP_IPS: $OLTP_IPS
 
-#echo FE_IPS: $FE_IPS
 for LINE in $FE_STACK_IDS; do
   echo FE_STACK_ID: $LINE
 done
@@ -99,7 +94,6 @@ for LINE in $FE_LINES; do
   echo "FRONTEND: $LINE"
 done
 
-#echo OLAP_IPS: $OLAP_IPS
 for LINE in $OLAP_STACK_IDS; do
   echo OLAP_STACK_ID: $LINE
 done
@@ -110,7 +104,6 @@ for LINE in $OLAP_LINES; do
   echo "OLAP_BACKEND: $LINE"
 done
 
-#echo OLTP_IPS: $OLTP_IPS
 for LINE in $OLTP_STACK_IDS; do
   echo OLTP_STACK_ID: $LINE
 done
@@ -121,15 +114,16 @@ for LINE in $OLTP_LINES; do
   echo "OLTP_BACKEND: $LINE"
 done
 
-#echo BACKEND_SEEDS: $(get_cassandra_seeds)
 MANILA_SHARE_PATH=`cat /etc/ceph/manila-playlister-share-path`
 echo MANILA_SHARE_PATH: $MANILA_SHARE_PATH
 MANILA_KEY=$(cat /etc/ceph/ceph.client.manila.keyring | grep key | awk '{print $3}')
 echo MANILA_KEY: $MANILA_KEY
 
-MON_LIST=$(for HOST in $CONTROL_HOSTS; do
+VERSIONED_CEPHFS_LIST=$(for HOST in $CONTROL_HOSTS; do
   IP=$(getent ahosts $HOST | awk '{print $1}' | tail -n 1)
-  echo "[v2:$IP:3300,v1:$IP:6789]"
+  CEPH_IP=$(echo $IP | sed 's/192.168.127/172.19.2/g')
+  echo "[v2:$CEPH_IP:3300,v1:$CEPH_IP:6789]"
 done)
-
-echo MON_LIST: $MON_LIST
+CEPHFS_LIST=$(echo $VERSIONED_CEPHFS_LIST | sed 's/v[0-9]://g' | sed 's/ /,/g' | sed -E 's/\[|\]//g' )
+echo VERSIONED_CEPHFS_LIST: $VERSIONED_CEPHFS_LIST
+echo CEPHFS_LIST: $CEPHFS_LIST
