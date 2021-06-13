@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
   # DEPLOY PLAYLISTER
   # create_cluster done for OLAP / OLTP services...
-  #playlister_deployer.create_cluster()
+  playlister_deployer.create_cluster()
   # IMPLEMENT:
   #playlister_deployer.load_schema()
 
