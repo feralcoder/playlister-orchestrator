@@ -10,16 +10,26 @@ parameters:
     label: Front-Middle-End Instance Name
     description: Name to be used for all python service instance
     default: playlister_fe
-  fe_sg_port_mins:
+  fe_sg_port_mins_tcp:
     type: comma_delimited_list
-    label: Front-Middle-End Ports, Mins
-    description: Port range mins for python services to receive
+    label: Front-Middle-End Ports, TCP, Mins
+    description: Port range mins for python services to receive, TCP
     default: "80,443,8000,8080,8443,22"
-  fe_sg_port_maxes:
+  fe_sg_port_maxes_tcp:
     type: comma_delimited_list
-    label: Front-Middle-End Ports, Maxes
-    description: Port range maxes for python services to receive
+    label: Front-Middle-End Ports, TCP, Maxes
+    description: Port range maxes for python services to receive, TCP
     default: "80,443,8000,8080,8443,22"
+  fe_sg_port_mins_udp:
+    type: comma_delimited_list
+    label: Front-Middle-End Ports, UDP, Mins
+    description: Port range udp for python services to receive, UDP
+    default: ""
+  fe_sg_port_maxes_udp:
+    type: comma_delimited_list
+    label: Front-Middle-End Ports, UDP, Maxes
+    description: Port range maxes for python services to receive, UDP
+    default: ""
   oltp_name:
     type: string
     label: Cassandra Instance Name
@@ -39,26 +49,46 @@ parameters:
   # 8600-8630 - ColumnStore
   # 8700 - ColumnStore
   # 8800 - ColumnStore
-  olap_sg_port_mins:
+  olap_sg_port_mins_tcp:
     type: comma_delimited_list
-    label: MariaDB ColumnStore Ports, Mins
-    description: Port range starts for mariadb columnstore service to receive
+    label: MariaDB ColumnStore Ports, TCP, Mins
+    description: Port range starts for mariadb columnstore service to receive, TCP
     default: "22,3306,8600,8700,8800"
-  olap_sg_port_maxes:
+  olap_sg_port_maxes_tcp:
     type: comma_delimited_list
-    label: MariaDB ColumnStore Ports, Maxes
-    description: Port range ends for mariadb columnstore service to receive
+    label: MariaDB ColumnStore Ports, TCP, Maxes
+    description: Port range ends for mariadb columnstore service to receive, TCP
     default: "22,3306,8630,8700,8800"
-  oltp_sg_port_mins:
+  olap_sg_port_mins_udp:
     type: comma_delimited_list
-    label: MariaDB ColumnStore Ports, Mins
-    description: Port range starts for mariadb columnstore service to receive
-    default: "22,3306,4444,4567,4568"
-  oltp_sg_port_maxes:
+    label: MariaDB ColumnStore Ports, UDP, Mins
+    description: Port range starts for mariadb columnstore service to receive, UDP
+    default: ""
+  olap_sg_port_maxes_udp:
     type: comma_delimited_list
-    label: MariaDB ColumnStore Ports, Maxes
-    description: Port range ends for mariadb columnstore service to receive
+    label: MariaDB ColumnStore Ports, UDP, Maxes
+    description: Port range ends for mariadb columnstore service to receive, UDP
+    default: ""
+  oltp_sg_port_mins_tcp:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, TCP, Mins
+    description: Port range starts for mariadb columnstore service to receive, TCP
     default: "22,3306,4444,4567,4568"
+  oltp_sg_port_maxes_tcp:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, TCP, Maxes
+    description: Port range ends for mariadb columnstore service to receive, TCP
+    default: "22,3306,4444,4567,4568"
+  oltp_sg_port_mins_udp:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, UDP, Mins
+    description: Port range starts for mariadb columnstore service to receive, UDP
+    default: "4567"
+  oltp_sg_port_maxes_udp:
+    type: comma_delimited_list
+    label: MariaDB ColumnStore Ports, UDP, Maxes
+    description: Port range ends for mariadb columnstore service to receive, UDP
+    default: "4567"
   private_network:
     type: string
     description: Network used by the servers
@@ -154,10 +184,19 @@ resources:
       rules:
         repeat:
           for_each:
-            <%port_min%>: { get_param: olap_sg_port_mins }
-            <%port_max%>: { get_param: olap_sg_port_maxes }
+            <%port_min%>: { get_param: olap_sg_port_mins_tcp }
+            <%port_max%>: { get_param: olap_sg_port_maxes_tcp }
           template:
-            protocol: tcp
+            protocol: TCP
+            port_range_min: <%port_min%>
+            port_range_max: <%port_max%>
+          permutations: false
+        repeat:
+          for_each:
+            <%port_min%>: { get_param: olap_sg_port_mins_udp }
+            <%port_max%>: { get_param: olap_sg_port_maxes_udp }
+          template:
+            protocol: UDP
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
@@ -169,10 +208,19 @@ resources:
       rules:
         repeat:
           for_each:
-            <%port_min%>: { get_param: oltp_sg_port_mins }
-            <%port_max%>: { get_param: oltp_sg_port_maxes }
+            <%port_min%>: { get_param: oltp_sg_port_mins_tcp }
+            <%port_max%>: { get_param: oltp_sg_port_maxes_tcp }
           template:
-            protocol: tcp
+            protocol: TCP
+            port_range_min: <%port_min%>
+            port_range_max: <%port_max%>
+          permutations: false
+        repeat:
+          for_each:
+            <%port_min%>: { get_param: oltp_sg_port_mins_udp }
+            <%port_max%>: { get_param: oltp_sg_port_maxes_udp }
+          template:
+            protocol: UDP
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
@@ -184,10 +232,19 @@ resources:
       rules:
         repeat:
           for_each:
-            <%port_min%>: { get_param: fe_sg_port_mins }
-            <%port_max%>: { get_param: fe_sg_port_maxes }
+            <%port_min%>: { get_param: fe_sg_port_mins_tcp }
+            <%port_max%>: { get_param: fe_sg_port_maxes_tcp }
           template:
-            protocol: tcp
+            protocol: TCP
+            port_range_min: <%port_min%>
+            port_range_max: <%port_max%>
+          permutations: false
+        repeat:
+          for_each:
+            <%port_min%>: { get_param: fe_sg_port_mins_udp }
+            <%port_max%>: { get_param: fe_sg_port_maxes_udp }
+          template:
+            protocol: TCP
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
