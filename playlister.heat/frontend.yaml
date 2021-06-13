@@ -27,12 +27,12 @@ parameters:
   fe_8080_pool_id:
     type: string
     description: Port 8080 Pool to contact
-  fe_8443:
-    type: string
-    description: Port 8443 Pool to contact
   fe_443_pool_id:
     type: string
     description: Port 443 Pool to contact
+  fe_8443_pool_id:
+    type: string
+    description: Port 8443 Pool to contact
   fe_key_name:
     type: string
     label: Front-Middle-End Key Name
