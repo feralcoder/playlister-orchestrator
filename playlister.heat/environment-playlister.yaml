@@ -1,7 +1,7 @@
 parameter_defaults:
-  fe_name: playlister1_fe
-  olap_name: playlister1_olap
-  oltp_name: playlister1_oltp
+  fe_name: playlister_fe
+  olap_name: playlister_olap
+  oltp_name: playlister_oltp
   fe_key_name: cliff_admin
   olap_key_name: cliff_admin
   oltp_key_name: cliff_admin

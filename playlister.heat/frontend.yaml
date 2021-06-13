@@ -14,16 +14,22 @@ parameters:
     type: comma_delimited_list
     label: Front-Middle-End Ports
     description: Ports for python services to receive
-    default: "80,443,8080,22"
+    default: "80,443,8000,8080,8443,22"
   fe_secgroup_id:
     type: string
     description: Front-Middle-End Security Group
   fe_80_pool_id:
     type: string
     description: Port 80 Pool to contact
+  fe_8000_pool_id:
+    type: string
+    description: Port 8000 Pool to contact
   fe_8080_pool_id:
     type: string
     description: Port 8080 Pool to contact
+  fe_8443:
+    type: string
+    description: Port 8443 Pool to contact
   fe_443_pool_id:
     type: string
     description: Port 443 Pool to contact
@@ -46,17 +52,17 @@ parameters:
     type: comma_delimited_list
     label: Front-Middle-End HTTP Ports
     description: HTTP Ports for python services to receive
-    default: "80,8080"
+    default: "80,8000,8080"
   fe_https_ports:
     type: comma_delimited_list
     label: Front-Middle-End HTTPS Ports
     description: HTTPS Ports for python services to receive
-    default: "443"
+    default: "443,8443"
   fe_sg_ports:
     type: comma_delimited_list
     label: Front-Middle-End Ports
     description: Ports for python services to receive
-    default: "80,443,8080,22"
+    default: "80,443,8000,8080,8443,22"
   fe_subnets:
     type: comma_delimited_list
     label: Front-Middle-End subnets
@@ -117,6 +123,13 @@ resources:
       address: { get_attr: [ frontend, first_address ] }
       protocol_port: 80
       subnet: { get_param: [ fe_subnets, 0 ] }
+  fe_8000_member:
+    type: OS::Octavia::PoolMember
+    properties:
+      pool: { get_param: fe_8000_pool_id }
+      address: { get_attr: [ frontend, first_address ] }
+      protocol_port: 8000
+      subnet: { get_param: [ fe_subnets, 0 ] }
   fe_8080_member:
     type: OS::Octavia::PoolMember
     properties:
@@ -131,6 +144,13 @@ resources:
       address: { get_attr: [ frontend, first_address ] }
       protocol_port: 443
       subnet: { get_param: [ fe_subnets, 0 ] }
+  fe_8443_member:
+    type: OS::Octavia::PoolMember
+    properties:
+      pool: { get_param: fe_8443_pool_id }
+      address: { get_attr: [ frontend, first_address ] }
+      protocol_port: 8443
+      subnet: { get_param: [ fe_subnets, 0 ] }
 
 
 ### OUTPUTS STOLEN FROM
@@ -142,9 +162,15 @@ outputs:
   fe_80_lb_member:
     description: LB port 80 member details.
     value: { get_attr: [fe_80_member, show] }
+  fe_8000_lb_member:
+    description: LB port 8000 member details.
+    value: { get_attr: [fe_8000_member, show] }
   fe_8080_lb_member:
     description: LB port 8080 member details.
     value: { get_attr: [fe_8080_member, show] }
   fe_443_lb_member:
     description: LB port 443 member details.
     value: { get_attr: [fe_443_member, show] }
+  fe_8443_lb_member:
+    description: LB port 8443 member details.
+    value: { get_attr: [fe_8443_member, show] }

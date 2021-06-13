@@ -54,6 +54,12 @@ resources:
       lb_algorithm: ROUND_ROBIN
       protocol: HTTP
       listener: { get_resource: fe_80_listener }
+  fe_8000_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTP
+      listener: { get_resource: fe_8000_listener }
   fe_8080_pool:
     type: OS::Octavia::Pool
     properties:
@@ -66,6 +72,12 @@ resources:
       lb_algorithm: ROUND_ROBIN
       protocol: HTTPS
       listener: { get_resource: fe_443_listener }
+  fe_8443_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTPS
+      listener: { get_resource: fe_8443_listener }
 
   fe_80_listener:
     type: OS::Octavia::Listener
@@ -73,6 +85,12 @@ resources:
       loadbalancer: { get_resource: fe_loadbalancer }
       protocol: HTTP
       protocol_port: 80
+  fe_8000_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTP
+      protocol_port: 8000
   fe_8080_listener:
     type: OS::Octavia::Listener
     properties:
@@ -85,6 +103,12 @@ resources:
       loadbalancer: { get_resource: fe_loadbalancer }
       protocol: HTTPS
       protocol_port: 443
+  fe_8443_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTPS
+      protocol_port: 8443
 
   fe_loadbalancer:
     type: OS::Octavia::LoadBalancer

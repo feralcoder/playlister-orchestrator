@@ -14,12 +14,12 @@ parameters:
     type: comma_delimited_list
     label: Front-Middle-End Ports, Mins
     description: Port range mins for python services to receive
-    default: "80,443,8080,22"
+    default: "80,443,8000,8080,8443,22"
   fe_sg_port_maxes:
     type: comma_delimited_list
     label: Front-Middle-End Ports, Maxes
     description: Port range maxes for python services to receive
-    default: "80,443,8080,22"
+    default: "80,443,8000,8080,8443,22"
   oltp_name:
     type: string
     label: Cassandra Instance Name
@@ -103,8 +103,10 @@ resources:
         properties:
           fe_secgroup_id: { get_resource: fe_secgroup }
           fe_80_pool_id: { get_resource: fe_80_pool }
+          fe_8000_pool_id: { get_resource: fe_8000_pool }
           fe_8080_pool_id: { get_resource: fe_8080_pool }
           fe_443_pool_id: { get_resource: fe_443_pool }
+          fe_8443_pool_id: { get_resource: fe_8443_pool }
           metadata: {"metering.stack": {get_param: "OS::stack_id"}}
 #          user_data:
 #            str_replace:
@@ -199,6 +201,14 @@ resources:
       timeout: 3
       max_retries: 3
       pool: { get_resource: fe_80_pool }
+  fe_8000_monitor:
+    type: OS::Octavia::HealthMonitor
+    properties:
+      delay: 3
+      type: HTTP
+      timeout: 3
+      max_retries: 3
+      pool: { get_resource: fe_8000_pool }
   fe_8080_monitor:
     type: OS::Octavia::HealthMonitor
     properties:
@@ -215,6 +225,14 @@ resources:
       timeout: 3
       max_retries: 3
       pool: { get_resource: fe_443_pool }
+  fe_8443_monitor:
+    type: OS::Octavia::HealthMonitor
+    properties:
+      delay: 3
+      type: HTTPS
+      timeout: 3
+      max_retries: 3
+      pool: { get_resource: fe_8443_pool }
 
   fe_80_pool:
     type: OS::Octavia::Pool
@@ -222,6 +240,12 @@ resources:
       lb_algorithm: ROUND_ROBIN
       protocol: HTTP
       listener: { get_resource: fe_80_listener }
+  fe_8000_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTP
+      listener: { get_resource: fe_8000_listener }
   fe_8080_pool:
     type: OS::Octavia::Pool
     properties:
@@ -234,6 +258,12 @@ resources:
       lb_algorithm: ROUND_ROBIN
       protocol: HTTPS
       listener: { get_resource: fe_443_listener }
+  fe_8443_pool:
+    type: OS::Octavia::Pool
+    properties:
+      lb_algorithm: ROUND_ROBIN
+      protocol: HTTPS
+      listener: { get_resource: fe_8443_listener }
 
   fe_80_listener:
     type: OS::Octavia::Listener
@@ -241,6 +271,12 @@ resources:
       loadbalancer: { get_resource: fe_loadbalancer }
       protocol: HTTP
       protocol_port: 80
+  fe_8000_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTP
+      protocol_port: 8000
   fe_8080_listener:
     type: OS::Octavia::Listener
     properties:
@@ -253,6 +289,12 @@ resources:
       loadbalancer: { get_resource: fe_loadbalancer }
       protocol: HTTPS
       protocol_port: 443
+  fe_8443_listener:
+    type: OS::Octavia::Listener
+    properties:
+      loadbalancer: { get_resource: fe_loadbalancer }
+      protocol: HTTPS
+      protocol_port: 8443
 
   fe_loadbalancer:
     type: OS::Octavia::LoadBalancer
