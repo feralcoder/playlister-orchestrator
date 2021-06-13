@@ -9,9 +9,9 @@ class PlaylisterDeployer ():
 
   ### CLUSTER TRANSITIONS
   def create_cluster(self):
-    #self.install_transaction_db()
-    #self.install_analytics_db()
-    #self.install_frontends()
+    self.install_transaction_db()
+    self.install_analytics_db()
+    self.install_frontends()
     self.bootstrap_transaction_db(nuke=True)
     # IMPLEMENT:
     #self.bootstrap_analytics_db(nuke=True)

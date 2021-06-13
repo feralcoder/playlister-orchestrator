@@ -192,11 +192,14 @@ class PlaylisterStateMachine ():
       logging.info("Checking galera state on {0}".format(node['name']))
       logging.info("/usr/bin/grep seqno /cephfs-data/{0}/galera/{1}.novalocal/grastate.dat | awk '{{print $2}}'".format(self.playlister_cluster.cluster_data['CLUSTER_NAME'], node['name']))
       seqno_result = self.node_managers[node['name']].host_commander.run("/usr/bin/grep seqno /cephfs-data/{0}/galera/{1}.novalocal/grastate.dat | awk '{{print $2}}'".format(self.playlister_cluster.cluster_data['CLUSTER_NAME'], node['name']), user='root')
-      logging.info("SEQNO RESULT: {0}".format(seqno_result))
       if seqno_result[0] == 0:
-        result = int(seqno_result[1].rstrip())
-        if not result == -1:
-          seqnos[result] = node['name']
+        try:
+          seqno = int(seqno_result[1].rstrip())
+          if not seqno == -1:
+            logging.info("Galera sequence number for {0}: {1}".format(node['name'], seqno))
+            seqnos[seqno] = node['name']
+        except ValueError as e:
+          logging.info("Could not get galera sequence number from {0}: {1}\n{2}".format(node['name'], seqno_result, e))
     logging.info("seqno map: {0}".format(seqnos))
     logging.info("seqno keys: {0}".format(sorted(seqnos.keys())))
     if seqnos:
@@ -214,6 +217,28 @@ class PlaylisterStateMachine ():
       if not (node_state['state'] == 'fc_playlister_oltp_preinitialize' and node_state['transition'] == 'finished'):
         raise Exception("Node {0} has not reached 'fc_playlister_oltp_preinitialize_finished': {1}".format(node['name'], node_state))
 
+  def initialize_galera_cluster(self):
+    self.stop_galera_cluster()
+    leader_node = self.identify_latest_galera_node()
+    if not leader_node:
+      leader_index = 0
+      leader_node = self.playlister_cluster.nodes['OLTP'][0]
+      logging.info("No suitable leader found, arbitrarily choosing index 0")
+    logging.info("Primary OLTP node is {0}, index {1}".format(leader_node['name'], leader_index))
+    self.preinitialize_galera_cluster()
+
+    self.start_galera_leader_node(leader_node)
+    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:leader_index])
+    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][leader_index+1:])
+
+  def start_galera_leader_node(self, node):
+    self.set_node_state(node, 'start_leader_node', push=True)
+    self.transition_node_state(node)
+    node_state = self.node_managers[node['name']].get_puppet_state()
+    logging.info("node {0} state: {1}".format(node['name'], node_state))
+    if not (node_state['state'] == 'fc_playlister_oltp_start_leader_node' and node_state['transition'] == 'finished'):
+      raise Exception("Node {0} has not reached 'fc_playlister_oltp_start_leader_node_finished': {1}".format(node['name'], node_state))
+
   def start_galera_cluster(self):
     self.assert_galera_cluster_stopped()
     primary_node = self.identify_latest_galera_node()
@@ -221,34 +246,12 @@ class PlaylisterStateMachine ():
       raise Exception("No suitable galera leader found!")
     primary_index = self.playlister_cluster.nodes['OLTP'].index(primary_node)
     logging.info("Primary OLTP node is {0}, index {1}".format(primary_node['name'], primary_index))
-    #self.preinitialize_galera_cluster()
 
     self.initialize_galera_primary_node(primary_node)
-    self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:primary_index])
-    self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][primary_index+1:])
+    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:primary_index])
+    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][primary_index+1:])
 
-  def initialize_galera_cluster(self):
-    self.stop_galera_cluster()
-    primary_node = self.identify_latest_galera_node()
-    if not primary_node:
-      raise Exception("No suitable galera leader found!")
-    primary_index = self.playlister_cluster.nodes['OLTP'].index(primary_node)
-    logging.info("Primary OLTP node is {0}, index {1}".format(primary_node['name'], primary_index))
-    self.preinitialize_galera_cluster()
-
-    self.initialize_galera_primary_node(primary_node)
-    self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:primary_index])
-    self.initialize_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][primary_index+1:])
-
-  def initialize_galera_primary_node(self, node):
-    self.set_node_state(node, 'initialize_primary_node', push=True)
-    self.transition_node_state(node)
-    node_state = self.node_managers[node['name']].get_puppet_state()
-    logging.info("node {0} state: {1}".format(node['name'], node_state))
-    if not (node_state['state'] == 'fc_playlister_oltp_initialize_primary_node' and node_state['transition'] == 'finished'):
-      raise Exception("Node {0} has not reached 'fc_playlister_oltp_initialize_primary_node_finished': {1}".format(node['name'], node_state))
-
-  def initialize_galera_secondary_nodes(self, nodes):
+  def join_galera_secondary_nodes(self, nodes):
     for node in nodes:
       self.set_node_state(node, 'join', push=True)
       self.transition_node_state(node)
@@ -287,8 +290,8 @@ class PlaylisterStateMachine ():
   def use_galera_storage_on_node(self, node):
     raise Exception("use_galera_storage_on_node not yet implemented!")
 
-  def initialize_galera_secondary_node(self, node):
-    raise Exception("initialize_galera_secondary_node not yet implemented!")
+  def join_galera_secondary_node(self, node):
+    raise Exception("join_galera_secondary_node not yet implemented!")
 
   def restore_galera_secondary_node(self, node):
     raise Exception("restore_galera_secondary_node not yet implemented!")
