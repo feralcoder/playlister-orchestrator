@@ -1,0 +1,14 @@
+node '$node.novalocal' {
+  $$fc_playlister_oltp_state_manifest = '$state'
+  $$playlister_galera_delayed_install = false
+
+  class { 'fc_common::facts':
+    stage => 'puppet-init'
+  }
+
+  class { 'fc_mariadb::galera::facts':
+    stage => 'puppet-init'
+  }
+
+  include class { 'fc_mariadb::galera': }
+}

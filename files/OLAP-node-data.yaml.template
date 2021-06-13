@@ -1,0 +1,3 @@
+---
+fc_playlister_olap:
+  cluster_name: $cluster_name

@@ -1,0 +1,6 @@
+fc_playlister_fe_state_fact=$state
+fc_playlister_fe::cluster_name=$cluster_name
+fc_playlister_fe::oltp_ips=$oltp_ips
+fc_playlister::cephfs_list=$cephfs_list
+fc_playlister::manila_key=$manila_key
+fc_playlister::manila_path=$manila_path

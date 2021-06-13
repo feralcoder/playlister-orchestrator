@@ -1,0 +1,14 @@
+node '$node.novalocal' {
+  $$fc_playlister_olap_state_manifest = '$state'
+  $$playlister_columnstore_delayed_install = false
+
+  class { 'fc_common::facts':
+    stage => 'puppet-init'
+  }
+
+  class { 'fc_mariadb::columnstore::facts':
+    stage => 'puppet-init'
+  }
+
+  include class { 'fc_mariadb::columnstore': }
+}

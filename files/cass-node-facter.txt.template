@@ -1,4 +1,3 @@
-test=$test
 fc_playlister_be_state_fact=$state
 cassandra::settings::cluster_name=$cluster_name
 cassandra::dc=$dc

@@ -1,0 +1,5 @@
+---
+fc_playlister_oltp:
+  cluster_name: $cluster_name
+fc_playlister_oltp:
+  oltp_ips: $oltp_ips

@@ -1,0 +1,14 @@
+node '$node.novalocal' {
+  $$fc_playlister_fe_state_manifest = '$state'
+  $$playlister_frontend_delayed_install = false
+
+  class { 'fc_common::facts':
+    stage => 'puppet-init'
+  }
+
+  class { 'fc_playlister_fe::facts':
+    stage => 'puppet-init'
+  }
+
+  include class { 'fc_playlister_fe': }
+}
