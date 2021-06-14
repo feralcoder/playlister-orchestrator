@@ -40,6 +40,9 @@ rename_servers () {
     done
     echo "Renaming $ID to $HOSTNAME"
     openstack server set --name $HOSTNAME $ID
+
+    echo "Resetting $HOSTNAME.novalocal on puppetmaster"
+    ssh root@puppetmaster "/opt/puppetlabs/bin/puppetserver ca clean --certname $HOSTNAME.novalocal"
   done
 }
 #
