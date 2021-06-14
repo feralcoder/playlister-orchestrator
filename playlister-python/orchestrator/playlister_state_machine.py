@@ -7,6 +7,8 @@ from .puppet_master_files import PuppetMasterFiles
 from .node_manager import NodeManager
 
 
+
+
 class PlaylisterStateMachine ():
   def __init__(self, name, manifest, script_dir, reinitialize=True):
     self.manifest = manifest
@@ -218,18 +220,29 @@ class PlaylisterStateMachine ():
         raise Exception("Node {0} has not reached 'fc_playlister_oltp_preinitialize_finished': {1}".format(node['name'], node_state))
 
   def initialize_galera_cluster(self):
+    # Cluster must be stopped to get sequence numbers
     self.stop_galera_cluster()
     leader_node = self.identify_latest_galera_node()
+    # OK if no leader node, we're wiping...
     if not leader_node:
-      leader_index = 0
       leader_node = self.playlister_cluster.nodes['OLTP'][0]
       logging.info("No suitable leader found, arbitrarily choosing index 0")
+    leader_index = self.playlister_cluster.nodes['OLTP'].index(leader_node)
     logging.info("Primary OLTP node is {0}, index {1}".format(leader_node['name'], leader_index))
     self.preinitialize_galera_cluster()
 
+    # Start cluster
     self.start_galera_leader_node(leader_node)
     self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:leader_index])
     self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][leader_index+1:])
+
+    # Reset playlister DB
+    self.set_node_state(leader_node, 'initialize', push=True)
+    self.transition_node_state(leader_node)
+    node_state = self.node_managers[leader_node['name']].get_puppet_state()
+    logging.info("node {0} state: {1}".format(leader_node['name'], node_state))
+    if not (node_state['state'] == 'fc_playlister_oltp_initialize' and node_state['transition'] == 'finished'):
+      raise Exception("Node {0} has not reached 'fc_playlister_oltp_initialize_finished': {1}".format(leader_node['name'], node_state))
 
   def start_galera_leader_node(self, node):
     self.set_node_state(node, 'start_leader_node', push=True)
@@ -241,15 +254,15 @@ class PlaylisterStateMachine ():
 
   def start_galera_cluster(self):
     self.assert_galera_cluster_stopped()
-    primary_node = self.identify_latest_galera_node()
-    if not primary_node:
+    leader_node = self.identify_latest_galera_node()
+    if not leader_node:
       raise Exception("No suitable galera leader found!")
-    primary_index = self.playlister_cluster.nodes['OLTP'].index(primary_node)
-    logging.info("Primary OLTP node is {0}, index {1}".format(primary_node['name'], primary_index))
+    leader_index = self.playlister_cluster.nodes['OLTP'].index(leader_node)
+    logging.info("Primary OLTP node is {0}, index {1}".format(leader_node['name'], leader_index))
 
-    self.initialize_galera_primary_node(primary_node)
-    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:primary_index])
-    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][primary_index+1:])
+    self.initialize_galera_leader_node(leader_node)
+    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][0:leader_index])
+    self.join_galera_secondary_nodes(self.playlister_cluster.nodes['OLTP'][leader_index+1:])
 
   def join_galera_secondary_nodes(self, nodes):
     for node in nodes:
@@ -275,14 +288,14 @@ class PlaylisterStateMachine ():
   def restore_galera_cluster(self):
     raise Exception("restore_galera_cluster not yet implemented!")
 
-  def restore_galera_primary_node(self, node):
-    raise Exception("restore_galera_primary_node not yet implemented!")
+  def restore_galera_leader_node(self, node):
+    raise Exception("restore_galera_leader_node not yet implemented!")
 
   def backup_galera_cluster(self):
     raise Exception("backup_galera_cluster not yet implemented!")
 
-  def backup_galera_primary_node(self, node):
-    raise Exception("backup_galera_primary_node not yet implemented!")
+  def backup_galera_leader_node(self, node):
+    raise Exception("backup_galera_leader_node not yet implemented!")
 
   def load_galera_schema_on_node(self, node):
     raise Exception("load_galera_schema_on_node not yet implemented!")
@@ -299,8 +312,8 @@ class PlaylisterStateMachine ():
   def backup_galera_secondary_node(self, node):
     raise Exception("backup_galera_secondary_node not yet implemented!")
 
-  def sync_galera_node_from_primary(self, node):
-    raise Exception("sync_galera_node_from_primary not yet implemented!")
+  def sync_galera_node_from_leader(self, node):
+    raise Exception("sync_galera_node_from_leader not yet implemented!")
 
   def nominalize_galera_cluster(self):
     raise Exception("nominalize_galera_cluster not yet implemented!")

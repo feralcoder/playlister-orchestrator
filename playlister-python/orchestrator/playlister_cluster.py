@@ -30,8 +30,8 @@ class PlaylisterCluster ():
     self.markup_maps['OLTP']['facts'] = {  'cluster_name':data['CLUSTER_NAME'], 'cephfs_list':data['CEPHFS_LIST'], 'manila_key':data['MANILA_KEY'], 'manila_path':data['MANILA_PATH'], 'oltp_ips':data['OLTP_IPS'] }
     self.markup_maps['FE']['data'] = { 'cluster_name':data['CLUSTER_NAME'], 'cephfs_list':data['CEPHFS_LIST'], 'manila_key':data['MANILA_KEY'], 'manila_path':data['MANILA_PATH'], 'oltp_ips':data['OLTP_IPS'] }
     self.markup_maps['FE']['manifest'] = {  }
-    self.markup_maps['FE']['facts'] = {  'cluster_name':data['CLUSTER_NAME'], 'cephfs_list':data['CEPHFS_LIST'], 'manila_key':data['MANILA_KEY'], 'manila_path':data['MANILA_PATH'], 'oltp_ips':data['OLTP_IPS'] }
-
+    self.markup_maps['FE']['facts'] = {  'cluster_name':data['CLUSTER_NAME'], 'cephfs_list':data['CEPHFS_LIST'], 'manila_key':data['MANILA_KEY'], 'manila_path':data['MANILA_PATH'], 'oltp_ips':data['OLTP_IPS'],
+                                         'oltp_vip':data['OLTP_VIP'], 'dbname':'playlister', 'dbuser':'playlister', 'dbpassword':'playlister_password' }
 
   ### REFACTORING
 
@@ -48,6 +48,10 @@ class PlaylisterCluster ():
     regexps['OLAP'] = re.compile('^OLAP_BACKEND: (.*)')
     regexps['OLTP'] = re.compile('^OLTP_BACKEND: (.*)')
     regexps['FE'] = re.compile('^FRONTEND: (.*)')
+    regexps['FE_VIP'] = re.compile('^FE_VIP: (.*)')
+    regexps['OLTP_VIP'] = re.compile('^OLTP_VIP: (.*)')
+    regexps['OLAP_VIP'] = re.compile('^OLAP_VIP: (.*)')
+    regexps['FE_IPS'] = re.compile('^FE_IPS: (.*)')
     regexps['OLTP_IPS'] = re.compile('^OLTP_IPS: (.*)')
     regexps['OLAP_IPS'] = re.compile('^OLAP_IPS: (.*)')
     regexps['CEPHFS_LIST'] = re.compile('^CEPHFS_LIST: (.*)')
@@ -64,7 +68,7 @@ class PlaylisterCluster ():
       if match:
         continue
       else:
-        for line_type in [ 'CLUSTER_NAME', 'OLTP_IPS', 'OLAP_IPS', 'CEPHFS_LIST', 'MANILA_KEY', 'MANILA_PATH' ]:
+        for line_type in [ 'CLUSTER_NAME', 'FE_VIP', 'OLTP_VIP', 'OLAP_VIP', 'FE_IPS', 'OLTP_IPS', 'OLAP_IPS', 'CEPHFS_LIST', 'MANILA_KEY', 'MANILA_PATH' ]:
           match = regexps[line_type].match(line)
           if match:
             logging.info("{0} Line: {1}".format(line_type, match.group(1)))
