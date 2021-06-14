@@ -43,6 +43,10 @@ rename_servers () {
 
     echo "Resetting $HOSTNAME.novalocal on puppetmaster"
     ssh root@puppetmaster "/opt/puppetlabs/bin/puppetserver ca clean --certname $HOSTNAME.novalocal"
+    # PUPPET PROBABLY RAN AND BJORKED ITSELF...
+    ssh -J admin1 -o "StrictHostKeyChecking no" -i ~/.ssh/keypair.cliff_admin.private -l centos $IP "sudo puppet resource service puppet ensure=stopped"
+    ssh -J admin1 -o "StrictHostKeyChecking no" -i ~/.ssh/keypair.cliff_admin.private -l centos $IP "sudo rm -rf /etc/puppetlabs/puppet/ssl/*"
+    ssh -J admin1 -o "StrictHostKeyChecking no" -i ~/.ssh/keypair.cliff_admin.private -l centos $IP "sudo puppet agent --test"
   done
 }
 #
