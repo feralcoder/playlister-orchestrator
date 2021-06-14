@@ -25,9 +25,3 @@ parameter_defaults:
   private_network: admin1-net
   public_network: public1
   vip_subnet: public1-subnet
-
-
-#resource_registry:  
-#    "OS::Nova::Server::PLFrontend": "frontend.yaml"
-#    "OS::Nova::Server::PLBackend": "backend.yaml"
-
