@@ -15,7 +15,10 @@ parameters:
     label: Front-Middle-End Ports
     description: Ports for python services to receive
     default: "80,443,8000,8080,8443,22"
-  fe_secgroup_id:
+  fe_secgroup_tcp_id:
+    type: string
+    description: Front-Middle-End Security Group
+  fe_secgroup_udp_id:
     type: string
     description: Front-Middle-End Security Group
   fe_80_pool_id:
@@ -88,7 +91,7 @@ resources:
       key_name: { get_param: fe_key_name }
       image: { get_param: fe_image }
       flavor: { get_param: fe_instance_type }
-      security_groups: [default, { get_param: fe_secgroup_id }]
+      security_groups: [default, { get_param: fe_secgroup_tcp_id }, { get_param: fe_secgroup_udp_id }]
       metadata: {get_param: metadata}
 #      user_data: {get_param: user_data}
 #      user_data_format: RAW

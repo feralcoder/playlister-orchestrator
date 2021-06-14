@@ -131,7 +131,8 @@ resources:
       resource:
         type: frontend.yaml
         properties:
-          fe_secgroup_id: { get_resource: fe_secgroup }
+          fe_secgroup_tcp_id: { get_resource: fe_secgroup_tcp }
+          fe_secgroup_udp_id: { get_resource: fe_secgroup_udp }
           fe_80_pool_id: { get_resource: fe_80_pool }
           fe_8000_pool_id: { get_resource: fe_8000_pool }
           fe_8080_pool_id: { get_resource: fe_8080_pool }
@@ -160,7 +161,9 @@ resources:
       resource:
         type: olap.yaml
         properties:
-          olap_secgroup_id: { get_resource: olap_secgroup }
+          olap_secgroup_tcp_id: { get_resource: olap_secgroup_tcp }
+          olap_secgroup_udp_id: { get_resource: olap_secgroup_udp }
+          olap_3306_pool_id: { get_resource: olap_3306_pool }
       cooldown: 60
       max_size: 10
       min_size: 4
@@ -171,16 +174,18 @@ resources:
       resource:
         type: oltp.yaml
         properties:
-          oltp_secgroup_id: { get_resource: oltp_secgroup }
+          oltp_secgroup_tcp_id: { get_resource: oltp_secgroup_tcp }
+          oltp_secgroup_udp_id: { get_resource: oltp_secgroup_udp }
+          oltp_3306_pool_id: { get_resource: oltp_3306_pool }
       cooldown: 60
       max_size: 10
       min_size: 4
       desired_capacity: 4
-  olap_secgroup:
+  olap_secgroup_tcp:
     type: OS::Neutron::SecurityGroup
     properties:
       name:
-        list_join: ['_', [ {get_param: olap_name}, 'secgroup']]
+        list_join: ['_', [ {get_param: olap_name}, 'secgroup_tcp']]
       rules:
         repeat:
           for_each:
@@ -191,6 +196,12 @@ resources:
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
+  olap_secgroup_udp:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: olap_name}, 'secgroup_udp']]
+      rules:
         repeat:
           for_each:
             <%port_min%>: { get_param: olap_sg_port_mins_udp }
@@ -200,11 +211,11 @@ resources:
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
-  oltp_secgroup:
+  oltp_secgroup_tcp:
     type: OS::Neutron::SecurityGroup
     properties:
       name:
-        list_join: ['_', [ {get_param: oltp_name}, 'secgroup']]
+        list_join: ['_', [ {get_param: oltp_name}, 'secgroup_tcp']]
       rules:
         repeat:
           for_each:
@@ -215,6 +226,12 @@ resources:
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
+  oltp_secgroup_udp:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: oltp_name}, 'secgroup_udp']]
+      rules:
         repeat:
           for_each:
             <%port_min%>: { get_param: oltp_sg_port_mins_udp }
@@ -224,11 +241,11 @@ resources:
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
-  fe_secgroup:
+  fe_secgroup_tcp:
     type: OS::Neutron::SecurityGroup
     properties:
       name:
-        list_join: ['_', [ {get_param: fe_name}, 'secgroup']]
+        list_join: ['_', [ {get_param: fe_name}, 'secgroup_tcp']]
       rules:
         repeat:
           for_each:
@@ -239,6 +256,12 @@ resources:
             port_range_min: <%port_min%>
             port_range_max: <%port_max%>
           permutations: false
+  fe_secgroup_udp:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name:
+        list_join: ['_', [ {get_param: fe_name}, 'secgroup_udp']]
+      rules:
         repeat:
           for_each:
             <%port_min%>: { get_param: fe_sg_port_mins_udp }

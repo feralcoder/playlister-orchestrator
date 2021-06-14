@@ -20,9 +20,15 @@ parameters:
     label: MariaDB ColumnStore Ports
     description: Ports for cassandra service to receive
     default: "22,3306,8600-8630,8700,8800"
-  olap_secgroup_id:
+  olap_secgroup_tcp_id:
     type: string
     description: Cassandra node Security Group
+  olap_secgroup_udp_id:
+    type: string
+    description: Cassandra node Security Group
+  olap_3306_pool_id:
+    type: string
+    description: Port 3306 Pool to contact
   olap_key_name:
     type: string
     label: Cassandra Key Name
@@ -57,7 +63,7 @@ resources:
       key_name: { get_param: olap_key_name }
       image: { get_param: olap_image }
       flavor: { get_param: olap_instance_type }
-      security_groups: [default, { get_param: olap_secgroup_id }]
+      security_groups: [default, { get_param: olap_secgroup_tcp_id }, { get_param: olap_secgroup_udp_id }]
       networks:
         repeat:
           for_each:
@@ -82,7 +88,19 @@ resources:
           params:
             test1: stuff
             test2: stuff
+
+  olap_3306_member:
+    type: OS::Octavia::PoolMember
+    properties:
+      pool: { get_param: olap_3306_pool_id }
+      address: { get_attr: [ olap_backend, first_address ] }
+      protocol_port: 3306
+      subnet: { get_param: [ olap_subnets, 0 ] }
+
 outputs:
   server_ip:
     description: IP Address of the olap_backend node
     value: { get_attr: [olap_backend, first_address] }
+  olap_3306_lb_member:
+    description: LB port 3306 member details.
+    value: { get_attr: [olap_3306_member, show] }
