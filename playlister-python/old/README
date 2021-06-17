@@ -1,8 +1,0 @@
-These files were written with overall provisioning in mind.
-OpenStack Heat has come to replace that.
-
-Some OpenStack management will be necessary for ongoing playlister management, but:
-1) I already have need for bash scripts using the OpenStack CLI tools, and have those tools to lean on
-2) The python OpenStack libraries are sad.
-2a) Inconsistent Auth: looks different between nova / neutron / octavia / etc.
-2b) Inconsistent Structures: same-named commands return classes, lists, whatever between diff't OS systems.
