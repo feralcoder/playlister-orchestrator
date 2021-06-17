@@ -154,7 +154,7 @@ resources:
       cooldown: 60
       max_size: 10
       min_size: 3
-      desired_capacity: 3
+      desired_capacity: 10
   olap_backends:
     type: OS::Heat::AutoScalingGroup
     properties:
