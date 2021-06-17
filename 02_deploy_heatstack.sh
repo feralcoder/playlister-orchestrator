@@ -15,10 +15,40 @@ use_venv playlister               || fail_exit "use_venv kolla-ansible"
 
 ANSIBLE_CONTROLLER=dmb
 
+wait_for_stack_to_build() {
+  STACK_NAME=$1
+  STACK_STATE=''
+  while [[ $STACK_STATE == '' ]] || [[ $STACK_STATE == 'PENDING_CREATE' ]]; do
+    echo "Stack $STACK_NAME state is '$STACK_STATE'.  Sleeping 60s..."
+    sleep 60
+    STACK_LINE=$(openstack stack list | grep " $STACK_NAME ")
+    STACK_STATE=$(echo $STACK_LINE | awk '{print $8}')
+  done
+  echo "Stack $STACK_NAME state is '$STACK_STATE'.  Continuing."
+}
 
-#STACK_NAME=playlister && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister.yaml $STACK_NAME 
-#STACK_NAME=playlister2 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister2.yaml $STACK_NAME 
-STACK_NAME=playlister3 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister3.yaml $STACK_NAME 
-#STACK_NAME=playlister4 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister4.yaml $STACK_NAME 
-#STACK_NAME=playlister5 && openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-playlister5.yaml $STACK_NAME 
+assert_stack_built_ok() {
+  STACK_NAME=$1
+  STACK_LINE=$(openstack stack list | grep " $STACK_NAME ")
+  STACK_STATE=$(echo $STACK_LINE | awk '{print $8}')
+  if [[ $STACK_STATE != 'CREATE_COMPLETE' ]]; then
+    echo "Stack $STACK_NAME did not create successfully.  State is $STACK_STATE.  Exiting."
+    exit 1
+}
 
+manage_stack() {
+  STACK_NAME=$1
+  echo "IMPLEMENT PER-NODE CORRECTNESS CHECKS BEFORE RUNNING MANAGE..."
+}
+
+STACK_NAME=playlister
+#STACK_NAME=playlister2
+#STACK_NAME=playlister3
+#STACK_NAME=playlister4
+#STACK_NAME=playlister5
+
+python3 $TEMPLATE_DIR/../playlister-python/playlister.py FLUSH $STACK_NAME
+openstack stack create -t $TEMPLATE_DIR/$STACK_NAME.yaml -e $TEMPLATE_DIR/environment-$STACK_NAME.yaml $STACK_NAME 
+wait_for_stack_to_build $STACK_NAME
+assert_stack_built_ok $STACK_NAME
+manage_stack $STACK_NAME
