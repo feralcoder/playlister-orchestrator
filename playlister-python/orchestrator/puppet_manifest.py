@@ -14,6 +14,33 @@ class PuppetManifest ():
     self.puppetmaster = puppetmaster
     self.puppet_master_files = PuppetMasterFiles(puppetmaster, "/etc/puppetlabs/code/environments/{0}".format(environment))
 
+  # FLUSH cluster configs when not enough state exists to create cluster and manifest objects
+  def flush_cluster(manifest_path, cluster_name, puppetmaster, environment):
+    puppet_master_files = PuppetMasterFiles(puppetmaster, "/etc/puppetlabs/code/environments/{0}".format(environment))
+    data_files     = puppet_master_files.list_files("data/nodes/")
+    manifest_files = puppet_master_files.list_files("manifests/")
+    facter_files   = puppet_master_files.list_files("site-modules/fc_common/files/dynamic_facter/")
+    cluster_data_files     = filter(lambda x: x.startswith("{0}-".format(cluster_name)), data_files)
+    cluster_manifest_files = filter(lambda x: x.startswith("{0}-".format(cluster_name)), manifest_files)
+    cluster_facter_files   = filter(lambda x: "_{0}-".format(cluster_name) in x, facter_files)
+    for file in cluster_data_files:
+      logging.info("Deleting data/nodes/{0} on puppetmaster...".format(file))
+      puppet_master_files.delete("data/nodes/{0}".format(file))
+    for file in cluster_manifest_files:
+      logging.info("Deleting manifests/{0} on puppetmaster...".format(file))
+      puppet_master_files.delete("manifests/{0}".format(file))
+    for file in cluster_facter_files:
+      logging.info("Deleting site-modules/fc_common/files/dynamic_facter/{0} on puppetmaster...".format(file))
+      puppet_master_files.delete("site-modules/fc_common/files/dynamic_facter/{0}".format(file))
+
+    cluster_path = "{0}/{1}".format(manifest_path, cluster_name)
+    if os.path.isdir(cluster_path):
+      for file in os.listdir(cluster_path):
+        logging.info("Deleting {0}/{1}".format(cluster_path, file))
+        os.remove("{0}/{1}".format(cluster_path, file))
+      logging.info("Deleting {0}".format(cluster_path))
+      os.rmdir(cluster_path)
+
   ### REFACTORING
   def deploy_node_configs(self, node):
     self.puppet_master_files.sync("{0}/data-{1}.yaml".format(self.cluster_path, node['name']), "data/nodes/{0}.novalocal.yaml".format(node['name']))

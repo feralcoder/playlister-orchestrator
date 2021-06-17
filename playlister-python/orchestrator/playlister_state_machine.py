@@ -5,8 +5,7 @@ from multiprocessing import Pool
 from .playlister_cluster import PlaylisterCluster
 from .puppet_master_files import PuppetMasterFiles
 from .node_manager import NodeManager
-
-
+from .puppet_manifest import PuppetManifest
 
 
 class PlaylisterStateMachine ():
@@ -48,8 +47,18 @@ class PlaylisterStateMachine ():
         self.manifest.configure_node(node, node_configs)
     self.manifest.write_node_list(self.playlister_cluster.nodes['FE'] + self.playlister_cluster.nodes['OLAP'] + self.playlister_cluster.nodes['OLTP'])
 
+  # FLUSH CLUSTER when not enough state exists to create objects
+  def flush_cluster(name, manifest_dir, script_dir, puppetmaster, environment):
+    PuppetManifest.flush_cluster(manifest_dir, name, puppetmaster, environment)
+
+    cache_dir = "{0}/cache".format(script_dir)
+    deets_file = "{0}/{1}_deets.txt".format(cache_dir, name)
+    if os.path.isfile(deets_file):
+      logging.info("Removing stack details from cach: {0}".format(deets_file))
+      os.remove(deets_file)
+
   def delete_cluster(self):
-    elf.clear_cluster(push=True)
+    self.clear_cluster(push=True)
 
   def clear_cluster(self, push=False):
     if self.manifest.cluster_exists():

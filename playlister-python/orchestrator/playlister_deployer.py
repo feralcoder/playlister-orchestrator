@@ -12,12 +12,21 @@ class PlaylisterDeployer ():
     self.install_transaction_db()
     self.install_analytics_db()
     self.install_frontends()
+
+  def initialize_cluster(self):
     self.bootstrap_transaction_db(nuke=True)
     # IMPLEMENT:
     #self.bootstrap_analytics_db(nuke=True)
 
   def deploy_playlister_code(self, parallel=False):
     self.playlister_state.deploy_playlister_code(parallel)
+
+  # FLUSH CLUSTER when not enough state exists to create objects
+  def flush_cluster(name, manifest_dir, script_dir, puppetmaster, environment):
+    PlaylisterStateMachine.flush_cluster(name, manifest_dir, script_dir, puppetmaster, environment)
+
+  def destroy_cluster(self):
+    self.playlister_state.destroy_cluster()
 
   def install_transaction_db(self):
     self.playlister_state.install_transaction_db()
