@@ -34,6 +34,7 @@ assert_stack_built_ok() {
   if [[ $STACK_STATE != 'CREATE_COMPLETE' ]]; then
     echo "Stack $STACK_NAME did not create successfully.  State is $STACK_STATE.  Exiting."
     exit 1
+  fi
 }
 
 manage_stack() {
@@ -41,14 +42,14 @@ manage_stack() {
   echo "IMPLEMENT PER-NODE CORRECTNESS CHECKS BEFORE RUNNING MANAGE..."
 }
 
-STACK_NAME=playlister
-#STACK_NAME=playlister2
+#STACK_NAME=playlister
+STACK_NAME=playlister2
 #STACK_NAME=playlister3
 #STACK_NAME=playlister4
 #STACK_NAME=playlister5
 
 python3 $TEMPLATE_DIR/../playlister-python/playlister.py FLUSH $STACK_NAME
-openstack stack create -t $TEMPLATE_DIR/$STACK_NAME.yaml -e $TEMPLATE_DIR/environment-$STACK_NAME.yaml $STACK_NAME 
+openstack stack create -t $TEMPLATE_DIR/playlister.yaml -e $TEMPLATE_DIR/environment-$STACK_NAME.yaml $STACK_NAME 
 wait_for_stack_to_build $STACK_NAME
 assert_stack_built_ok $STACK_NAME
 manage_stack $STACK_NAME
