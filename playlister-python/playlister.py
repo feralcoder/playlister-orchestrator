@@ -41,13 +41,11 @@ class PlaylisterOperator:
   def stack_install(self):
     if not self.manifest:
       self.manage()
-    # SPLIT INSTALL / INITIALIZE in playlister_deployer
     self.playlister_deployer.create_cluster()
 
   def stack_initialize(self):
     if not self.manifest:
       self.manage()
-    # SPLIT INSTALL / INITIALIZE in playlister_deployer
     self.playlister_deployer.initialize_cluster()
     #self.playlister_deployer.load_schema()
 
